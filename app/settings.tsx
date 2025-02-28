@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 import { ScreenContent } from '~/components/ScreenContent';
 
-export default function Modal() {
+export default function Settings() {
   return (
     <>
       <ScreenContent path="app/modal.tsx" title="Modal" />
