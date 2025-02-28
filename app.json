@@ -1,10 +1,9 @@
 {
   "expo": {
-    "name": "lexicon_hub",
+    "name": "Lexicon Hub",
     "slug": "lexicon_hub",
     "version": "1.0.0",
-
-    "scheme": "lexicon_hub",
+    "scheme": "lexicon-hub",
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -21,29 +20,43 @@
     ],
     "experiments": {
       "typedRoutes": true,
-
       "tsconfigPaths": true
     },
-
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-
     "userInterfaceStyle": "automatic",
-
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hub.lexicon"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/adaptive-icon/foreground.png",
+        "backgroundImage": "./assets/adaptive-icon/background.png"
+      },
+      "package": "com.hub.lexicon"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "540a2284-4d1d-412e-bdd9-2f5ab820e321"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/540a2284-4d1d-412e-bdd9-2f5ab820e321"
     }
   }
 }
