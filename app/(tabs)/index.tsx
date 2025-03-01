@@ -10,7 +10,7 @@ const books = [
   { id: '4', title: 'The Witcher' },
 ];
 
-export default function LibraryScreen() {
+export default function LibraryTab() {
   const { searchQuery } = useLibraryStore();
 
   // 🔥 Optimize filtering using useMemo

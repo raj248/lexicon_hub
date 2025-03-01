@@ -44,11 +44,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="DiscoverTab"
         options={{
           title: '',
           header: () => <FloatingHeader title="Discover" />,
           tabBarIcon: ({ color }) => <TabBarIcon name="compass" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="BackupTab"
+        options={{
+          title: '',
+          header: () => <FloatingHeader title="Backup & Sync" showSearchBar={false} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="cloud" color={color} />,
         }}
       />
     </Tabs>
