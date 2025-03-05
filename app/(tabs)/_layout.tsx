@@ -2,8 +2,14 @@ import { Tabs } from 'expo-router';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { TabBarIcon } from '../../components/TabBarIcon';
 import { FloatingHeader } from '~/components/Header';
+import { scanEpubFiles } from '~/lib/scanEpubFiles';
+import { useEffect } from 'react';
+
 
 export default function TabLayout() {
+  useEffect(() => {
+    scanEpubFiles();
+  }, []);
   const { colors } = useColorScheme();
 
   return (
@@ -40,7 +46,7 @@ export default function TabLayout() {
         options={{
           title: '',
           header: () => <FloatingHeader title="Library" />,
-          tabBarIcon: ({ color }) => <TabBarIcon name="bookshelf" color={color} />,
+          tabBarIcon: ({ color }: { color: any }) => <TabBarIcon name="bookshelf" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -48,7 +54,7 @@ export default function TabLayout() {
         options={{
           title: '',
           header: () => <FloatingHeader title="Discover" />,
-          tabBarIcon: ({ color }) => <TabBarIcon name="compass" color={color} />,
+          tabBarIcon: ({ color }: { color: any }) => <TabBarIcon name="compass" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -56,7 +62,7 @@ export default function TabLayout() {
         options={{
           title: '',
           header: () => <FloatingHeader title="Backup & Sync" showSearchBar={false} />,
-          tabBarIcon: ({ color }) => <TabBarIcon name="cloud" color={color} />,
+          tabBarIcon: ({ color }: { color: any }) => <TabBarIcon name="cloud" color={color} />,
         }}
       />
     </Tabs>

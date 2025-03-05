@@ -20,14 +20,14 @@ export {
 } from 'expo-router';
 
 export default function RootLayout() {
-  useInitialAndroidBarSync();
-  const { colorScheme, isDarkColorScheme } = useColorScheme();
-
-  // Hide the navigation bar when the app starts
   useEffect(() => {
     NavigationBar.setVisibilityAsync('hidden'); // ✅ Hide navigation bar
     NavigationBar.setBehaviorAsync('overlay-swipe'); // ✅ Show only when swiped
   }, []);
+  useInitialAndroidBarSync();
+  const { colorScheme, isDarkColorScheme } = useColorScheme();
+
+  // Hide the navigation bar when the app starts
 
   return (
     <>
@@ -42,7 +42,8 @@ export default function RootLayout() {
             <NavThemeProvider value={NAV_THEME[colorScheme]}>
               <Stack screenOptions={SCREEN_OPTIONS}>
                 <Stack.Screen name="(tabs)" options={TABS_OPTIONS} />
-                <Stack.Screen name="settings" options={MODAL_OPTIONS} />
+                <Stack.Screen name="settings" options={SETTINGS_OPTIONS} />
+                <Stack.Screen name="bookDetails" options={DETAILS_OPTIONS} />
               </Stack>
             </NavThemeProvider>
           </ActionSheetProvider>
@@ -59,9 +60,15 @@ const TABS_OPTIONS = {
   headerShown: false,
 } as const;
 
-const MODAL_OPTIONS = {
+const SETTINGS_OPTIONS = {
   presentation: 'modal',
   animation: 'fade_from_bottom', // for android
   title: 'Settings',
+  headerRight: () => <ThemeToggle />,
+} as const;
+
+const DETAILS_OPTIONS = {
+  presentation: 'modal',
+  animation: 'fade_from_bottom', // for android
   headerRight: () => <ThemeToggle />,
 } as const;
