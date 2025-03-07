@@ -42,6 +42,7 @@
         "foregroundImage": "./assets/adaptive-icon/foreground.png",
         "backgroundImage": "./assets/adaptive-icon/background.png"
       },
+      "permissions":["android.permission.Manage_External_Storage", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"],
       "package": "com.hub.lexicon"
     },
     "extra": {

@@ -34,6 +34,7 @@
     "expo": "^52.0.37",
     "expo-constants": "~17.0.7",
     "expo-dev-client": "~5.0.4",
+    "expo-file-system": "~18.0.11",
     "expo-image": "~2.0.6",
     "expo-linking": "~7.0.5",
     "expo-media-library": "~17.0.6",
@@ -44,6 +45,7 @@
     "expo-system-ui": "~4.0.8",
     "expo-updates": "~0.27.1",
     "expo-web-browser": "~14.0.2",
+    "file-scanner": "file:../FileScanner",
     "firebase": "^10.5.2",
     "nativewind": "latest",
     "react": "18.3.1",
@@ -63,7 +65,7 @@
     "react-native-webview": "13.12.5",
     "tailwind-merge": "^2.2.1",
     "zustand": "^4.5.1",
-    "expo-file-system": "~18.0.11"
+    "expo-intent-launcher": "~12.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
