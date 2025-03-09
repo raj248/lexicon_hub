@@ -2,13 +2,14 @@ import { Tabs } from 'expo-router';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { TabBarIcon } from '../../components/TabBarIcon';
 import { FloatingHeader } from '~/components/Header';
-import { scanEpubFiles } from '~/lib/scanEpubFiles';
+import * as EpubKit from '~/modules/epub-kit';
+
 import { useEffect } from 'react';
 
 
 export default function TabLayout() {
   useEffect(() => {
-    scanEpubFiles();
+    console.log(EpubKit.scanEpubFiles());
   }, []);
   const { colors } = useColorScheme();
 
