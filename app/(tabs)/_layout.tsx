@@ -6,10 +6,14 @@ import * as EpubKit from '~/modules/epub-kit';
 
 import { useEffect } from 'react';
 
-
+const testFile = "/storage/emulated/0/Books/LN/Trapped in a Dating Sim The World of Otome Games is Tough for Mobs vol 10.epub"
 export default function TabLayout() {
   useEffect(() => {
-    console.log(EpubKit.scanEpubFiles());
+    async function loadMetadata() {
+      const metadata = await EpubKit.extractMetadata(testFile);
+      console.log("Metadata from native module:", metadata);
+    }
+    loadMetadata();
   }, []);
   const { colors } = useColorScheme();
 

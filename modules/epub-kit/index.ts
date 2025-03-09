@@ -5,8 +5,8 @@ export function getTheme(): string {
   return EpubKit.getTheme();
 }
 
-export async function scanEpubFiles(){
-  return await EpubKit.scanEpubFiles();
+export async function scanFiles(){
+  return await EpubKit.scanFiles();
 }
 
 export async function extractMetadata(filePath:string) {
@@ -17,6 +17,9 @@ export async function extractMetadata(filePath:string) {
   });
 }
 
+export async function getChapter(epubFilePath: String, chapterPath: String) {
+  return await EpubKit.getChapter(epubFilePath, chapterPath);
+}
 
 export async function requestStoragePermission() {
   return await EpubKit.requestStoragePermission();

@@ -16,6 +16,18 @@ import java.util.zip.ZipFile
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStreamReader
+import java.io.InputStream
+import java.io.BufferedReader
+import java.nio.charset.Charset
+import android.util.Base64
+import java.io.ByteArrayInputStream
+import java.net.URLConnection
+import android.util.Log
+import java.io.BufferedInputStream
+import java.io.IOException
+
+
+data class ManifestItem(val id: String, val href: String, val mediaType: String)
 
 class EpubKitModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -49,7 +61,7 @@ class EpubKitModule : Module() {
       }
     }
 
-    AsyncFunction("scanEpubFiles") { promise: Promise ->
+    AsyncFunction("scanFiles") { promise: Promise ->
       val storageDir = Environment.getExternalStorageDirectory()
       val epubFiles = mutableListOf<String>()
 
@@ -80,19 +92,28 @@ class EpubKitModule : Module() {
 
         val zipFile = ZipFile(filePath)
         val containerEntry = zipFile.getEntry("META-INF/container.xml")
-        val containerStream = zipFile.getInputStream(containerEntry)
-        val opfPath = parseContainerXml(containerStream)
-        // val opfPath = "OEBPS/content.opf"
+            ?: throw Exception("container.xml not found")
 
-        if (opfPath != null) {
-          val opfEntry = zipFile.getEntry(opfPath)
-          val opfStream = zipFile.getInputStream(opfEntry)
-          val metadata = parseOpfXml(opfStream)
-          promise.resolve(metadata)
-        } else {
-          promise.reject("E_NO_OPF", "content.opf not found", null)
-          return@AsyncFunction
-        }
+        val containerStream = zipFile.getInputStream(containerEntry)
+        val opfPath = parseContainerXml(containerStream) ?: throw Exception("content.opf path is null")        
+        containerStream.close()
+        
+        val opfEntry = zipFile.getEntry(opfPath)
+            ?: throw Exception("content.opf not found at path: $opfPath")
+
+        val opfStream = zipFile.getInputStream(opfEntry)
+        val metadata = parseOpfXml(opfStream)
+        opfStream.close()
+
+        val manifest = parseManifest(zipFile, opfPath)
+
+        val coverImage = extractCoverImage(zipFile, opfPath, manifest)
+        metadata["coverImage"] = coverImage?.let { formatCoverImage(it) } ?: ""
+
+        val toc = extractTableOfContents(zipFile, manifest)
+        metadata["toc"] = toc
+
+        promise.resolve(metadata)
       } catch (e: Exception) {
         promise.reject("E_PARSING_ERROR", e.localizedMessage, e)
         return@AsyncFunction
@@ -100,14 +121,31 @@ class EpubKitModule : Module() {
     }
 
 
-    AsyncFunction("getEpubChapter") { epubFilePath: String, chapterPath: String, promise: Promise ->
-      val chapterContent = readFileFromZip(epubFilePath, chapterPath)
-      if (chapterContent != null) {
-        promise.resolve(chapterContent)
-      } else {
-        promise.reject("E_CHAPTER_ERROR", "Failed to extract chapter", null)
-      }
+    AsyncFunction("getChapter") { epubFilePath: String, chapterPath: String, promise: Promise ->
+    try {
+        val zipFile = ZipFile(epubFilePath)
+        
+        // Ensure chapter path is valid
+        val chapterEntry = zipFile.getEntry(chapterPath)
+        if (chapterEntry == null) {
+            promise.reject("E_CHAPTER_NOT_FOUND", "Chapter not found: $chapterPath", null)
+            return@AsyncFunction
+        }
+
+        // Read chapter with correct encoding
+        val inputStream = zipFile.getInputStream(chapterEntry)
+        val reader = BufferedReader(InputStreamReader(inputStream, Charset.forName("UTF-8")))
+        val content = reader.readText()
+        reader.close()
+        inputStream.close()
+        zipFile.close()
+
+        promise.resolve(content)
+    } catch (e: Exception) {
+        promise.reject("E_CHAPTER_ERROR", "Failed to extract chapter: ${e.localizedMessage}", e)
     }
+}
+
   }
 
 
@@ -118,7 +156,7 @@ class EpubKitModule : Module() {
     }
   }
 
-    private fun parseContainerXml(inputStream: java.io.InputStream): String? {
+  private fun parseContainerXml(inputStream: java.io.InputStream): String? {
     val factory = XmlPullParserFactory.newInstance()
     factory.isNamespaceAware = true
     val parser = factory.newPullParser()
@@ -136,23 +174,203 @@ class EpubKitModule : Module() {
     return opfPath
   }
 
-  private fun parseOpfXml(inputStream: java.io.InputStream): Map<String, String> {
+  private fun parseOpfXml(inputStream: InputStream): MutableMap<String, Any> {
     val factory = XmlPullParserFactory.newInstance()
     factory.isNamespaceAware = true
     val parser = factory.newPullParser()
     parser.setInput(InputStreamReader(inputStream))
 
-    val metadata = mutableMapOf<String, String>()
+    val metadata = mutableMapOf<String, Any>()
     var eventType = parser.eventType
     while (eventType != XmlPullParser.END_DOCUMENT) {
-      if (eventType == XmlPullParser.START_TAG) {
-        when (parser.name) {
-          "title" -> metadata["title"] = parser.nextText()
-          "creator" -> metadata["author"] = parser.nextText()
+        if (eventType == XmlPullParser.START_TAG) {
+            when (parser.name) {
+                "title" -> metadata["title"] = parser.nextText()
+                "creator" -> metadata["author"] = parser.nextText()
+                "publisher" -> metadata["publisher"] = parser.nextText()
+                "description" -> metadata["description"] = parser.nextText()
+                "language" -> metadata["language"] = parser.nextText()
+                // Add more metadata fields as needed
+            }
         }
-      }
-      eventType = parser.next()
+        eventType = parser.next()
     }
     return metadata
-  }
+}
+
+private fun extractCoverImage(zipFile: ZipFile, opfPath: String, manifest: Map<String, String>): ByteArray? {
+    val coverId = manifest["cover"]
+    Log.d("EpubKitModule", "Cover ID: $coverId")
+
+    if (coverId == null) {
+        Log.e("EpubKitModule", "No 'cover' entry found in manifest.")
+        return null
+    }
+
+    val coverPath = manifest[coverId] ?: coverId  // Use coverId directly if it's the actual path
+    val fixedCoverPath = resolvePath(opfPath, coverPath) // Fix the relative path
+
+    Log.d("EpubKitModule", "Resolved Cover Path: $fixedCoverPath")
+
+    val coverEntry = zipFile.getEntry(fixedCoverPath)
+    if (coverEntry == null) {
+        Log.e("EpubKitModule", "Cover image entry not found in ZIP")
+        return null
+    }
+
+    return try {
+        zipFile.getInputStream(coverEntry).use { inputStream ->
+            BufferedInputStream(inputStream).readBytes().also {
+                Log.d("EpubKitModule", "Extracted cover image size: ${it.size} bytes")
+            }
+        }
+    } catch (e: IOException) {
+        Log.e("EpubKitModule", "Error extracting cover image: ${e.message}", e)
+        null
+    }
+}
+
+// Helper function to resolve relative paths
+private fun resolvePath(opfPath: String, relativePath: String): String {
+    val opfDir = opfPath.substringBeforeLast('/', "") // Get the base directory of content.opf
+    return if (opfDir.isNotEmpty()) "$opfDir/$relativePath" else relativePath
+}
+
+
+
+
+
+private fun parseManifest(zipFile: ZipFile, opfPath: String): Map<String, String> {
+    val opfEntry = zipFile.getEntry(opfPath) ?: return emptyMap()
+    val inputStream = zipFile.getInputStream(opfEntry)
+    val factory = XmlPullParserFactory.newInstance()
+    factory.isNamespaceAware = true
+    val parser = factory.newPullParser() 
+    parser.setInput(InputStreamReader(inputStream))
+
+    val manifest = mutableMapOf<String, String>()
+    var eventType = parser.eventType
+    while (eventType != XmlPullParser.END_DOCUMENT) {
+        if (eventType == XmlPullParser.START_TAG && parser.name == "item") {
+            val id = parser.getAttributeValue(null, "id")
+            val href = parser.getAttributeValue(null, "href")
+            if (id != null && href != null) {
+                manifest[id] = href
+            }
+        }
+        eventType = parser.next()
+    }
+    return manifest
+}
+
+
+private fun extractTableOfContents(zipFile: ZipFile, manifest: Map<String, String>): List<Map<String, String>> {
+    val tocPath = manifest["ncx"] ?: manifest["nav"] ?: return emptyList()
+    
+    Log.d("EpubKitModule", "Looking for TOC file at: $tocPath")  
+
+    // Normalize path (EPUB files use relative paths inside /OEBPS/)
+    val normalizedPath = if (zipFile.getEntry(tocPath) != null) tocPath else "OEBPS/$tocPath"
+    
+    val tocEntry = zipFile.getEntry(normalizedPath) ?: return emptyList<Map<String, String>>().also {
+        Log.e("EpubKitModule", "TOC file not found in EPUB: $normalizedPath")
+    }
+    
+    val inputStream = zipFile.getInputStream(tocEntry)
+
+    return if (normalizedPath.endsWith(".ncx")) {
+        parseNcxToc(inputStream)
+    } else {
+        parseNavToc(inputStream)
+    }
+}
+
+
+
+private fun parseNcxToc(inputStream: InputStream): List<Map<String, String>> {
+    val parser = XmlPullParserFactory.newInstance().newPullParser()
+    parser.setInput(InputStreamReader(inputStream))
+
+    val toc = mutableListOf<Map<String, String>>()
+    var title: String? = null
+    var href: String? = null
+
+    var eventType = parser.eventType
+    while (eventType != XmlPullParser.END_DOCUMENT) {
+        when (eventType) {
+            XmlPullParser.START_TAG -> {
+                when (parser.name) {
+                    "navLabel" -> title = extractText(parser) // Fix: Extract text safely
+                    "content" -> {
+                        href = parser.getAttributeValue(null, "src")?.trim()
+                    }
+                }
+            }
+            XmlPullParser.END_TAG -> {
+                if (parser.name == "navPoint" && title != null && href != null) {
+                    toc.add(mapOf("title" to title, "href" to href))
+                    Log.d("EpubKitModule", "Added TOC Entry: Title=$title, Href=$href")
+                    title = null
+                    href = null
+                }
+            }
+        }
+        eventType = parser.next()
+    }
+    return toc
+}
+
+// **Helper Function to Extract Text Safely**
+private fun extractText(parser: XmlPullParser): String {
+    var text = ""
+    var eventType = parser.next()
+    while (eventType != XmlPullParser.END_TAG || parser.name != "navLabel") {
+        if (eventType == XmlPullParser.TEXT) {
+            text += parser.text.trim()
+        }
+        eventType = parser.next()
+    }
+    return text
+}
+
+
+
+private fun parseNavToc(inputStream: InputStream): List<Map<String, String>> {
+    val parser = XmlPullParserFactory.newInstance().newPullParser()
+    parser.setInput(InputStreamReader(inputStream))
+
+    val toc = mutableListOf<Map<String, String>>()
+    var title: String? = null
+    var href: String? = null
+
+    var eventType = parser.eventType
+    while (eventType != XmlPullParser.END_DOCUMENT) {
+        when (eventType) {
+            XmlPullParser.START_TAG -> {
+                if (parser.name == "a") {
+                    href = parser.getAttributeValue(null, "href")?.trim()
+                    title = extractText(parser) // Fix: Extract text properly
+                    Log.d("EpubKitModule", "Found NAV TOC entry: Title=$title, Href=$href")
+                }
+            }
+            XmlPullParser.END_TAG -> {
+                if (parser.name == "a" && title != null && href != null) {
+                    toc.add(mapOf("title" to title, "href" to href))
+                    title = null
+                    href = null
+                }
+            }
+        }
+        eventType = parser.next()
+    }
+    return toc
+}
+
+
+private fun formatCoverImage(imageData: ByteArray): String {
+    val mimeType = URLConnection.guessContentTypeFromStream(ByteArrayInputStream(imageData)) ?: "image/png"
+    val base64Image = Base64.encodeToString(imageData, Base64.DEFAULT)
+    return "data:$mimeType;base64,$base64Image"
+}
+
 }
