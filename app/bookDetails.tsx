@@ -84,12 +84,12 @@ export default function BookDetailsScreen() {
           <>
             <Text style={{ fontWeight: "bold", marginTop: 16 }}>External Links</Text>
             <TouchableOpacity onPress={() => Linking.openURL(book.externalLink ? book.externalLink : "")}>
-              <Text style={{ textDecorationLine: "underline" }}>{book.externalLink}</Text>
+              <Text style={{ textDecorationLine: "underline" }}>{book.externalLink ? book.externalLink : ""}</Text>
             </TouchableOpacity>
           </>
         )}
 
-        {!book.category.includes("Light Novel") && (
+        {!book.category?.includes("Light Novel") && (
           <TouchableOpacity style={{ backgroundColor: "blue", padding: 16, borderRadius: 8, marginTop: 16 }} onPress={handleSyncStatus}>
             <Text style={{ fontWeight: "bold", textAlign: "center" }}>Sync Status</Text>
           </TouchableOpacity>

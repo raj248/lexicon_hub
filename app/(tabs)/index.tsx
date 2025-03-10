@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { Text } from '~/components/nativewindui/Text';
 import { FlatGrid } from 'react-native-super-grid'; // ✅ Auto Grid Layout
@@ -8,6 +8,8 @@ import { useColorScheme } from '~/lib/useColorScheme';
 import { useRouter } from 'expo-router';
 import { Category, useBookStore } from '~/store/bookStore';
 import { useWatcherStore } from '~/store/watcherStore';
+import * as EpubKit from '~/modules/epub-kit';
+import uuid from 'react-native-uuid';
 
 // Dummy Data Injection
 const dummyBooks = [
@@ -17,6 +19,7 @@ const dummyBooks = [
     author: 'J.R.R. Tolkien',
     category: 'Light Novel' as Category,
     addedAt: 1709745600000,
+    language: 'en',
     coverImage: 'https://placehold.co/250x350'
   },
   {
@@ -25,6 +28,7 @@ const dummyBooks = [
     author: 'J.R.R. Tolkien',
     category: 'Comic' as Category,
     addedAt: 1709745600000,
+    language: 'en',
     coverImage: 'https://placehold.co/250x350'
   },
   {
@@ -33,6 +37,7 @@ const dummyBooks = [
     author: 'J.K. Rowling',
     category: 'Web Novel' as Category,
     addedAt: 1709745600000,
+    language: 'en',
     coverImage: 'https://placehold.co/250x350'
   },
   {
@@ -41,6 +46,7 @@ const dummyBooks = [
     author: 'Andrzej Sapkowski',
     category: 'Manga' as Category,
     addedAt: 1709745600000,
+    language: 'en',
     coverImage: 'https://placehold.co/250x350'
   },
 ];
@@ -78,6 +84,26 @@ const dummyWatchers = {
 
 
 export default function LibraryTab() {
+
+  const [scanResult, setScanResult] = useState<string[]>([]);
+  const getBook = async (path: string) => {
+    const metadata = await EpubKit.extractMetadata(path);
+    const id = uuid.v1();
+    const newBook = { ...metadata, "path": path, "addedAt": Date.now(), "id": id };
+    console.log("New Book: ", newBook.title);
+    addBook(newBook)
+  }
+  useEffect(() => {
+    console.log("useEffect triggered")
+    console.log(uuid.v1())
+    scanResult.forEach((path) => getBook(path))
+    console.log("Books: ", Object.keys(books))
+  }, [scanResult]);
+
+  useEffect(() => {
+    EpubKit.scanFiles().then((result) => setScanResult(result));
+  }, []);
+
   const { searchQuery } = useLibraryStore();
   const { colors, isDarkColorScheme } = useColorScheme();
   const router = useRouter();

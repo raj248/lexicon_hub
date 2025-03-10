@@ -13,7 +13,7 @@ export default function TabLayout() {
       const metadata = await EpubKit.extractMetadata(testFile);
       console.log("Metadata from native module:", metadata);
     }
-    loadMetadata();
+    // loadMetadata();
   }, []);
   const { colors } = useColorScheme();
 

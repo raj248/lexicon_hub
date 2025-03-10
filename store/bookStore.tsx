@@ -9,11 +9,12 @@ export type Book = {
   title: string;
   author: string;
   coverImage: string;
-  category: Category;
+  language: string;
+  category?: Category;
   description?: string;
   path?: string;  // Path for local files (if EPUB/PDF)
   volumes?: string[]; // Only for Light Novels (list of volume file paths)
-  addedAt: number;
+  addedAt?: number;
   externalLink?: string; // Store external sources for the book
 };
 
@@ -31,8 +32,17 @@ export const useBookStore = create<BookStore>()(
 
       addBook: (book) =>
         set((state) => {
+          // console.log("Adding book:", book, book.id);
           if (state.books[book.id]) return state; // Prevent duplicates
-          return { books: { ...state.books, [book.id]: book } };
+          return {
+            books: {
+              ...state.books,
+              [book.id]: {
+                ...book,
+                category: book.category ?? "Book", // Set default category if not provided
+              },
+            },
+          };
         }),
 
       updateBook: (id, data) =>

@@ -25,8 +25,10 @@ import java.net.URLConnection
 import android.util.Log
 import java.io.BufferedInputStream
 import java.io.IOException
-
-
+import javax.xml.parsers.DocumentBuilderFactory
+import org.w3c.dom.Element
+import org.w3c.dom.Document
+import com.google.gson.Gson
 data class ManifestItem(val id: String, val href: String, val mediaType: String)
 
 class EpubKitModule : Module() {
@@ -102,17 +104,20 @@ class EpubKitModule : Module() {
             ?: throw Exception("content.opf not found at path: $opfPath")
 
         val opfStream = zipFile.getInputStream(opfEntry)
-        val metadata = parseOpfXml(opfStream)
+        val (manifest, metadata) = parseOpfFile(zipFile, opfPath)
         opfStream.close()
 
-        val manifest = parseManifest(zipFile, opfPath)
+        // val manifest = parseManifest(zipFile, opfPath)
 
-        val coverImage = extractCoverImage(zipFile, opfPath, manifest)
+        val coverImage = extractCoverImage(zipFile, opfPath, manifest, metadata)
         metadata["coverImage"] = coverImage?.let { formatCoverImage(it) } ?: ""
 
         val toc = extractTableOfContents(zipFile, manifest)
-        metadata["toc"] = toc
+        val gson = Gson()
+        val tocJson = gson.toJson(toc)  // ✅ Convert List<Map<String, String>> to JSON string
+        metadata["toc"] = tocJson
 
+        zipFile.close()
         promise.resolve(metadata)
       } catch (e: Exception) {
         promise.reject("E_PARSING_ERROR", e.localizedMessage, e)
@@ -174,42 +179,108 @@ class EpubKitModule : Module() {
     return opfPath
   }
 
-  private fun parseOpfXml(inputStream: InputStream): MutableMap<String, Any> {
-    val factory = XmlPullParserFactory.newInstance()
-    factory.isNamespaceAware = true
-    val parser = factory.newPullParser()
-    parser.setInput(InputStreamReader(inputStream))
 
-    val metadata = mutableMapOf<String, Any>()
-    var eventType = parser.eventType
-    while (eventType != XmlPullParser.END_DOCUMENT) {
-        if (eventType == XmlPullParser.START_TAG) {
-            when (parser.name) {
-                "title" -> metadata["title"] = parser.nextText()
-                "creator" -> metadata["author"] = parser.nextText()
-                "publisher" -> metadata["publisher"] = parser.nextText()
-                "description" -> metadata["description"] = parser.nextText()
-                "language" -> metadata["language"] = parser.nextText()
-                // Add more metadata fields as needed
+
+private fun parseOpfFile(zipFile: ZipFile, opfPath: String): Pair<MutableMap<String, String>, MutableMap<String, String>> {
+    val manifest = mutableMapOf<String, String>()
+    val metadata = mutableMapOf<String, String>()
+
+    val opfEntry = zipFile.getEntry(opfPath)
+    if (opfEntry == null) {
+        Log.e("EpubKitModule", "OPF file not found at $opfPath")
+        return Pair(mutableMapOf(), mutableMapOf())
+    }
+
+    try {
+        zipFile.getInputStream(opfEntry).use { inputStream ->
+            val document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream)
+            document.documentElement.normalize()
+
+            // Extract <metadata> elements
+            val metadataNodes = document.getElementsByTagName("metadata").item(0) as? Element
+            if (metadataNodes != null) {
+                extractDublinCoreMetadata(metadataNodes, metadata)
+                extractMetaTags(metadataNodes, metadata)
+            }
+
+            // Extract <manifest> elements
+            val manifestNodes = document.getElementsByTagName("item")
+            for (i in 0 until manifestNodes.length) {
+                val node = manifestNodes.item(i) as? Element
+                val id = node?.getAttribute("id") ?: continue
+                val href = node.getAttribute("href") ?: continue
+                manifest[id] = href
             }
         }
-        eventType = parser.next()
+        Log.d("EpubKitModule", "Metadata: $metadata")
+    } catch (e: Exception) {
+        Log.e("EpubKitModule", "Error parsing OPF file: ${e.message}", e)
     }
-    return metadata
+
+    return Pair(manifest, metadata)
 }
 
-private fun extractCoverImage(zipFile: ZipFile, opfPath: String, manifest: Map<String, String>): ByteArray? {
-    val coverId = manifest["cover"]
-    Log.d("EpubKitModule", "Cover ID: $coverId")
+/**
+ * Extracts Dublin Core metadata (dc:title, dc:creator, etc.)
+ */
+private fun extractDublinCoreMetadata(metadataElement: Element, metadata: MutableMap<String, String>) {
+    val dublinCoreTags = mapOf(
+        "title" to "dc:title",
+        "creator" to "dc:creator",
+        "language" to "dc:language",
+        "publisher" to "dc:publisher",
+        "subject" to "dc:subject",
+        "description" to "dc:description"
+    )
 
-    if (coverId == null) {
-        Log.e("EpubKitModule", "No 'cover' entry found in manifest.")
+    for ((key, tagName) in dublinCoreTags) {
+        val nodes = metadataElement.getElementsByTagName(tagName)
+        if (nodes.length > 0) {
+            metadata[key] = nodes.item(0).textContent.trim()
+        }
+    }
+}
+
+/**
+ * Extracts <meta> tags inside <metadata>
+ */
+private fun extractMetaTags(metadataElement: Element, metadata: MutableMap<String, String>) {
+    val metaNodes = metadataElement.getElementsByTagName("meta")
+    for (i in 0 until metaNodes.length) {
+        val node = metaNodes.item(i) as? Element
+        val name = node?.getAttribute("name") ?: continue
+        val content = node.getAttribute("content") ?: continue
+        metadata[name] = content
+    }
+}
+
+
+
+private fun extractCoverImage(zipFile: ZipFile, opfPath: String, manifest: Map<String, String>, meta: Map<String, String>): ByteArray? {
+    var coverPath: String? = null
+
+    // 1️⃣ Check <meta> first (direct path)
+    val metaCover = meta["cover"]
+    if (metaCover != null && isImageFile(metaCover)) {
+        coverPath = metaCover
+        Log.d("EpubKitModule", "Cover found in <meta>: $coverPath")
+    }
+
+    // 2️⃣ If <meta> has an ID (not a direct path), check <manifest>
+    if (coverPath == null) {
+        val coverId = metaCover ?: manifest["cover"]
+        if (coverId != null) {
+            coverPath = manifest[coverId] ?: coverId // Use ID to find path
+            Log.d("EpubKitModule", "Cover found in <manifest>: $coverPath")
+        }
+    }
+
+    if (coverPath == null || !isImageFile(coverPath)) {
+        Log.e("EpubKitModule", "No valid cover image found.")
         return null
     }
 
-    val coverPath = manifest[coverId] ?: coverId  // Use coverId directly if it's the actual path
-    val fixedCoverPath = resolvePath(opfPath, coverPath) // Fix the relative path
-
+    val fixedCoverPath = resolvePath(opfPath, coverPath) // Resolve relative path
     Log.d("EpubKitModule", "Resolved Cover Path: $fixedCoverPath")
 
     val coverEntry = zipFile.getEntry(fixedCoverPath)
@@ -229,6 +300,12 @@ private fun extractCoverImage(zipFile: ZipFile, opfPath: String, manifest: Map<S
         null
     }
 }
+
+// ✅ Helper function to check if a file is an image
+private fun isImageFile(filePath: String): Boolean {
+    return filePath.lowercase().matches(""".*\.(jpg|jpeg|png|gif|webp)$""".toRegex())
+}
+
 
 // Helper function to resolve relative paths
 private fun resolvePath(opfPath: String, relativePath: String): String {
@@ -368,9 +445,12 @@ private fun parseNavToc(inputStream: InputStream): List<Map<String, String>> {
 
 
 private fun formatCoverImage(imageData: ByteArray): String {
-    val mimeType = URLConnection.guessContentTypeFromStream(ByteArrayInputStream(imageData)) ?: "image/png"
-    val base64Image = Base64.encodeToString(imageData, Base64.DEFAULT)
-    return "data:$mimeType;base64,$base64Image"
+    ByteArrayInputStream(imageData).use { stream ->
+        val mimeType = URLConnection.guessContentTypeFromStream(stream) ?: "image/jpeg" // Change default if needed
+        val base64Image = Base64.encodeToString(imageData, Base64.DEFAULT)
+        return "data:$mimeType;base64,$base64Image"
+    }
 }
+
 
 }
