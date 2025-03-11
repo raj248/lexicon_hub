@@ -2,8 +2,8 @@ import { useCallback, useState } from "react";
 import { View, FlatList, RefreshControl, TouchableOpacity } from "react-native";
 import { Image } from "expo-image";
 import { Text } from "~/components/nativewindui/Text";
-import { useBookStore, Category } from "~/store/bookStore";
-import { useWatcherStore } from "~/store/watcherStore";
+import { useBookStore, Category } from "~/stores/bookStore";
+import { useWatcherStore } from "~/stores/watcherStore";
 import * as Linking from "expo-linking";
 
 

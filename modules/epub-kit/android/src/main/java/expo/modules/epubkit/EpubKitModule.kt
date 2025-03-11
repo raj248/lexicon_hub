@@ -280,7 +280,7 @@ private fun extractCoverImage(zipFile: ZipFile, opfPath: String, manifest: Map<S
         return null
     }
 
-    val fixedCoverPath = resolvePath(opfPath, coverPath) // Resolve relative path
+    val fixedCoverPath = resolvePath(zipFile, opfPath, coverPath) // Resolve relative path
     Log.d("EpubKitModule", "Resolved Cover Path: $fixedCoverPath")
 
     val coverEntry = zipFile.getEntry(fixedCoverPath)
@@ -307,11 +307,33 @@ private fun isImageFile(filePath: String): Boolean {
 }
 
 
-// Helper function to resolve relative paths
-private fun resolvePath(opfPath: String, relativePath: String): String {
+private fun resolvePath(zipFile: ZipFile, opfPath: String, relativeCoverPath: String): String? {
     val opfDir = opfPath.substringBeforeLast('/', "") // Get the base directory of content.opf
-    return if (opfDir.isNotEmpty()) "$opfDir/$relativePath" else relativePath
+
+    // Check if the relative path itself exists in the ZIP
+    if (zipFile.getEntry(relativeCoverPath) != null) {
+        Log.d("EpubKitModule", "Resolved path: $relativeCoverPath")
+        return relativeCoverPath
+    }
+
+    // Check if the file exists in the opf directory
+    val directPath = "$opfDir/$relativeCoverPath"
+    if (zipFile.getEntry(directPath) != null) {
+        Log.d("EpubKitModule", "Resolved path: $directPath")
+        return directPath
+    }
+
+    // Check if the file exists inside an "Images" directory in the opf directory
+    val imagesPath = "$opfDir/Images/$relativeCoverPath"
+    if (zipFile.getEntry(imagesPath) != null) {
+        Log.d("EpubKitModule", "Resolved path: $imagesPath")
+        return imagesPath
+    }
+
+    Log.w("EpubKitModule", "No valid path found for: $relativeCoverPath")
+    return null
 }
+
 
 
 
@@ -386,7 +408,7 @@ private fun parseNcxToc(inputStream: InputStream): List<Map<String, String>> {
             XmlPullParser.END_TAG -> {
                 if (parser.name == "navPoint" && title != null && href != null) {
                     toc.add(mapOf("title" to title, "href" to href))
-                    Log.d("EpubKitModule", "Added TOC Entry: Title=$title, Href=$href")
+                    // Log.d("EpubKitModule", "Added TOC Entry: Title=$title, Href=$href")
                     title = null
                     href = null
                 }
@@ -427,7 +449,7 @@ private fun parseNavToc(inputStream: InputStream): List<Map<String, String>> {
                 if (parser.name == "a") {
                     href = parser.getAttributeValue(null, "href")?.trim()
                     title = extractText(parser) // Fix: Extract text properly
-                    Log.d("EpubKitModule", "Found NAV TOC entry: Title=$title, Href=$href")
+                    // Log.d("EpubKitModule", "Found NAV TOC entry: Title=$title, Href=$href")
                 }
             }
             XmlPullParser.END_TAG -> {

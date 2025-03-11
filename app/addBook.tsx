@@ -2,8 +2,8 @@ import { useState } from "react";
 import { View, TextInput, ScrollView, TouchableOpacity } from "react-native";
 import { Text } from "~/components/nativewindui/Text";
 import { Picker, PickerItem } from "~/components/nativewindui/Picker";
-import { Book, useBookStore, Category } from "~/store/bookStore";
-import { useProgressStore } from "~/store/progressStore";
+import { Book, useBookStore, Category } from "~/stores/bookStore";
+import { useProgressStore } from "~/stores/progressStore";
 
 export default function AddBookScreen() {
   const { addBook } = useBookStore();
@@ -11,7 +11,7 @@ export default function AddBookScreen() {
 
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
-  const [category, setCategory] = useState<Category>("Book");
+  const [category, setCategory] = useState<string[]>(["Book"]);
   const [coverImage, setCoverImage] = useState("");
   const [path, setPath] = useState(""); // For EPUB/PDF
   const [externalLinks, setExternalLinks] = useState<string[]>([]);
@@ -27,6 +27,7 @@ export default function AddBookScreen() {
       author,
       category,
       coverImage,
+      language: 'en',
       path: path.trim() || undefined,
       externalLink: externalLinks.length ? externalLinks.join(", ") : undefined,
       addedAt: Date.now(),
@@ -66,7 +67,7 @@ export default function AddBookScreen() {
 
         {/* Category Picker */}
         <Text className="font-semibold">Category</Text>
-        <Picker selectedValue={category} onValueChange={setCategory} className="mb-4">
+        <Picker selectedValue={category} onValueChange={(value) => setCategory(value)} className="mb-4">
           <PickerItem value="Light Novel" label="Light Novel" />
           <PickerItem value="Web Novel" label="Web Novel" />
           <PickerItem value="Manga" label="Manga" />

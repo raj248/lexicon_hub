@@ -1,55 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Pressable } from 'react-native';
+import { View, Pressable, InteractionManager } from 'react-native';
 import { Text } from '~/components/nativewindui/Text';
 import { FlatGrid } from 'react-native-super-grid'; // ✅ Auto Grid Layout
-import { useLibraryStore } from '~/store/useLibraryStore';
+import { useLibraryStore } from '~/stores/useLibraryStore';
 import { Image } from 'expo-image';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { useRouter } from 'expo-router';
-import { Category, useBookStore } from '~/store/bookStore';
-import { useWatcherStore } from '~/store/watcherStore';
-import * as EpubKit from '~/modules/epub-kit';
-import uuid from 'react-native-uuid';
-
-// Dummy Data Injection
-const dummyBooks = [
-  {
-    id: '1',
-    title: 'The Lord of the Rings',
-    author: 'J.R.R. Tolkien',
-    category: 'Light Novel' as Category,
-    addedAt: 1709745600000,
-    language: 'en',
-    coverImage: 'https://placehold.co/250x350'
-  },
-  {
-    id: '2',
-    title: 'The Hobbit',
-    author: 'J.R.R. Tolkien',
-    category: 'Comic' as Category,
-    addedAt: 1709745600000,
-    language: 'en',
-    coverImage: 'https://placehold.co/250x350'
-  },
-  {
-    id: '3',
-    title: 'Harry Potter',
-    author: 'J.K. Rowling',
-    category: 'Web Novel' as Category,
-    addedAt: 1709745600000,
-    language: 'en',
-    coverImage: 'https://placehold.co/250x350'
-  },
-  {
-    id: '4',
-    title: 'The Witcher',
-    author: 'Andrzej Sapkowski',
-    category: 'Manga' as Category,
-    addedAt: 1709745600000,
-    language: 'en',
-    coverImage: 'https://placehold.co/250x350'
-  },
-];
+import Animated, { BounceIn, BounceInUp, BounceOut, Easing, FadeIn, FadeInUp, LinearTransition, SlideInRight } from "react-native-reanimated";
+import { Button } from '~/components/Button';
+import { RefreshControl, ScrollView } from 'react-native-gesture-handler';
+import scanAndAddBooks from '~/utils/scanAndAddBooks';
+import { useBookStore } from '~/stores/bookStore';
 
 
 const dummyWatchers = {
@@ -85,39 +46,18 @@ const dummyWatchers = {
 
 export default function LibraryTab() {
 
-  const [scanResult, setScanResult] = useState<string[]>([]);
-  const getBook = async (path: string) => {
-    const metadata = await EpubKit.extractMetadata(path);
-    const id = uuid.v1();
-    const newBook = { ...metadata, "path": path, "addedAt": Date.now(), "id": id };
-    console.log("New Book: ", newBook.title);
-    addBook(newBook)
-  }
-  useEffect(() => {
-    console.log("useEffect triggered")
-    console.log(uuid.v1())
-    scanResult.forEach((path) => getBook(path))
-    console.log("Books: ", Object.keys(books))
-  }, [scanResult]);
-
-  useEffect(() => {
-    EpubKit.scanFiles().then((result) => setScanResult(result));
-  }, []);
-
+  const { books, debugClear } = useBookStore();
   const { searchQuery } = useLibraryStore();
-  const { colors, isDarkColorScheme } = useColorScheme();
+  const { colors } = useColorScheme();
   const router = useRouter();
-  const { books, addBook } = useBookStore();
-  const { watchers, addWatcher } = useWatcherStore();
 
-  // Populate store with dummy data (Only runs once)
-  if (Object.keys(books).length === 0) {
-    dummyBooks.forEach((book) => addBook(book));
-  }
-  if (Object.keys(watchers).length === 0) {
-    Object.entries(dummyWatchers).forEach(([id, watcher]) => {
-      addWatcher(id, watcher.bookUrl);
-      watcher.updates.forEach((update) => useWatcherStore.getState().addUpdate(id, update)); // Add updates
+  const clear = () => {
+    console.log("clearing")
+    InteractionManager.runAfterInteractions(() => {
+      // Object.keys(books).map((id) => useBookStore.getState().removeBook(id))
+      // Object.keys(watchers).map((id) => useWatcherStore.getState().removeWatcher(id))
+      debugClear();
+      console.log("cleared")
     });
   }
 
@@ -132,43 +72,67 @@ export default function LibraryTab() {
   }, [searchQuery, books]);
 
 
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    InteractionManager.runAfterInteractions(() => {
+      scanAndAddBooks().then(() => {
+        setRefreshing(false);
+      });
+    });
+  };
 
   return (
-    <View className="flex-1 p-4">
-      <FlatGrid
-        data={filteredBookIds.map((id) => books[id])}
-        itemDimension={120} // ✅ Dynamic column sizing
-        windowSize={5} // Keeps nearby items in memory
-        initialNumToRender={20} // Pre-renders 20 items
-        removeClippedSubviews={true} // Unmounts off-screen items
-        keyExtractor={(item: any) => item.id}
-        spacing={10} // ✅ Adds spacing between grid items
-        renderItem={({ item }: { item: any }) => (
-          <Pressable
-            className="p-2 rounded-lg"
-            onPress={() => router.push(`/bookDetails?bookId=${item.id}`)}
-            style={{ backgroundColor: colors.card, width: '100%', height: 200 }}
-          >
-            <Image
-              source={{ uri: item.coverImage }}
-              style={{ width: '100%', height: 160, borderRadius: 8 }}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-            />
-            <View style={{ height: 36, justifyContent: 'center' }}>
-              <Text
-                className="text-center text-xs px-1"
-                numberOfLines={2}
-                ellipsizeMode="tail"
+    <ScrollView
+      className="flex-1"
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      <View className="p-4 mb-4">
+        <Button title="ClearDebug" onPress={clear} />
+        <FlatGrid
+          scrollEnabled={false}
+          data={filteredBookIds.map((id) => books[id])}
+          itemDimension={120}
+          windowSize={11}
+          maxToRenderPerBatch={15} // Reduce number of items rendered at once
+          initialNumToRender={10}
+          removeClippedSubviews={true}
+          keyExtractor={(item: any) => item.id}
+          spacing={10}
+          renderItem={({ item }: { item: any }) => (
+            <Animated.View layout={LinearTransition.springify()}
+              entering={FadeInUp
+                .delay(500)
+                .duration(500)
+                .easing(Easing.sin)}
+              exiting={BounceOut
+                .delay(200)
+                .duration(300)
+                .easing(Easing.inOut(Easing.elastic(2)))}
+            >
+              <Pressable
+                className="p-2 rounded-lg"
+                onPress={() => InteractionManager.runAfterInteractions(() => router.push(`/bookDetails?bookId=${item.id}`))} style={{ backgroundColor: colors.card, width: "100%", height: 270 }}
               >
-                {item.title}
-              </Text>
-            </View>
-          </Pressable>
-
-        )}
-      />
-    </View>
+                <Image
+                  source={{ uri: item.coverImage }}
+                  style={{ width: "100%", height: 220, borderRadius: 8 }}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                />
+                <View style={{ height: 36, justifyContent: "center" }}>
+                  <Text className="text-center text-xs px-1" numberOfLines={2} ellipsizeMode="tail">
+                    {item.title}
+                  </Text>
+                </View>
+              </Pressable>
+            </Animated.View>
+          )}
+        />
+      </View>
+    </ScrollView>
   );
 }
 
