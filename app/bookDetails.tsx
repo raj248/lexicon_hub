@@ -6,9 +6,10 @@ import { Picker, PickerItem } from "~/components/nativewindui/Picker";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { useBookStore } from "~/stores/bookStore";
 import { useProgressStore } from "~/stores/progressStore";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { Button } from "~/components/Button";
 import { Image } from "expo-image";
+import * as EpubKit from '~/modules/epub-kit';
 
 export default function BookDetailsScreen() {
   const { colors } = useColorScheme();
@@ -20,7 +21,6 @@ export default function BookDetailsScreen() {
 
   const book = books[bookId as string];
   if (!book) return <Text style={{ padding: 16, color: colors.destructive }}>Book not found.</Text>;
-  console.log(bookId);
 
   useEffect(() => {
     if (book) navigation.setOptions({ title: book.title });
@@ -29,7 +29,6 @@ export default function BookDetailsScreen() {
   const handleSyncStatus = () => {
     console.log("Syncing book status..."); // To be integrated later
   };
-  console.log(book.author)
 
   return (
     <View style={{ flex: 1 }}>
@@ -68,7 +67,8 @@ export default function BookDetailsScreen() {
         <View className="flex-row justify-between mt-4 mb-4">
           {!book.category?.includes("Light Novel") && <Button title="Update" />}
           <Button title="Edit" />
-          <Button title="Read" />
+          <Button title="Read"
+            onPress={() => router.push(`/reader?bookId=${book.id}`)} />
         </View>
 
         <View className="flex-row items-center gap-3">

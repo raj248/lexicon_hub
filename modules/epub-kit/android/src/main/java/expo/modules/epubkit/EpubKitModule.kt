@@ -29,6 +29,8 @@ import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
 import org.w3c.dom.Document
 import com.google.gson.Gson
+import org.jsoup.Jsoup
+
 data class ManifestItem(val id: String, val href: String, val mediaType: String)
 
 class EpubKitModule : Module() {
@@ -81,7 +83,7 @@ class EpubKitModule : Module() {
     }
 
     AsyncFunction("extractMetadata") { filePath: String, promise: Promise ->
-      try {
+    try {
         val file = File(filePath)
         if (!file.exists()) {
             promise.reject("E_FILE_NOT_FOUND", "File not found: $filePath", null)
@@ -93,65 +95,192 @@ class EpubKitModule : Module() {
         }
 
         val zipFile = ZipFile(filePath)
+
+        // Locate and parse container.xml to get content.opf path
         val containerEntry = zipFile.getEntry("META-INF/container.xml")
             ?: throw Exception("container.xml not found")
-
         val containerStream = zipFile.getInputStream(containerEntry)
-        val opfPath = parseContainerXml(containerStream) ?: throw Exception("content.opf path is null")        
+        val opfPath = parseContainerXml(containerStream) ?: throw Exception("content.opf path is null")
         containerStream.close()
-        
-        val opfEntry = zipFile.getEntry(opfPath)
-            ?: throw Exception("content.opf not found at path: $opfPath")
 
-        val opfStream = zipFile.getInputStream(opfEntry)
+        // Parse OPF file to extract metadata and manifest
         val (manifest, metadata) = parseOpfFile(zipFile, opfPath)
-        opfStream.close()
 
-        // val manifest = parseManifest(zipFile, opfPath)
-
+        // Extract cover image
         val coverImage = extractCoverImage(zipFile, opfPath, manifest, metadata)
         metadata["coverImage"] = coverImage?.let { formatCoverImage(it) } ?: ""
 
-        val toc = extractTableOfContents(zipFile, manifest)
+        // ✅ Extract spine paths
+        val spinePaths = extractSpine(zipFile, opfPath)
+
+        // ✅ Extract chapters with titles
+        val chapters = extractChaptersFromSpine(zipFile, spinePaths)
+
+        // Convert chapters list to JSON
         val gson = Gson()
-        val tocJson = gson.toJson(toc)  // ✅ Convert List<Map<String, String>> to JSON string
-        metadata["toc"] = tocJson
+        metadata["chapters"] = gson.toJson(chapters)
 
         zipFile.close()
         promise.resolve(metadata)
-      } catch (e: Exception) {
+    } catch (e: Exception) {
         promise.reject("E_PARSING_ERROR", e.localizedMessage, e)
         return@AsyncFunction
-      }
     }
+}
+
+
 
 
     AsyncFunction("getChapter") { epubFilePath: String, chapterPath: String, promise: Promise ->
     try {
-        val zipFile = ZipFile(epubFilePath)
-        
-        // Ensure chapter path is valid
-        val chapterEntry = zipFile.getEntry(chapterPath)
-        if (chapterEntry == null) {
-            promise.reject("E_CHAPTER_NOT_FOUND", "Chapter not found: $chapterPath", null)
-            return@AsyncFunction
+        ZipFile(epubFilePath).use { zipFile ->
+            Log.d("EpubKitModule", "Requested chapter path: $chapterPath")
+
+            // List all entries to check if the chapter path exists
+            val allEntries = zipFile.entries().toList().map { it.name }
+            Log.d("EpubKitModule", "Available entries: $allEntries")
+
+            val chapterEntry = zipFile.getEntry(chapterPath)
+
+            if (chapterEntry == null) {
+                Log.e("EpubKitModule", "Chapter not found: $chapterPath")
+                promise.reject("E_CHAPTER_NOT_FOUND", "Chapter not found in EPUB.", null)
+                return@AsyncFunction
+            }
+
+            Log.d("EpubKitModule", "Chapter found: ${chapterEntry.name}")
+
+            val chapterContent = zipFile.getInputStream(chapterEntry).bufferedReader().use { it.readText() }
+            Log.d("EpubKitModule", "Extracted chapter content length: ${chapterContent.length} characters")
+
+            val resourcePaths = extractResourcePaths(chapterContent)
+            Log.d("EpubKitModule", "Extracted resource paths: $resourcePaths")
+
+            val resources = extractResources(zipFile, resourcePaths)
+            Log.d("EpubKitModule", "Extracted resources count: ${resources.size}")
+
+            promise.resolve(
+                mapOf(
+                    "content" to chapterContent,
+                    "resources" to resources.mapValues { Base64.encodeToString(it.value, Base64.DEFAULT) }
+                )
+            )
         }
-
-        // Read chapter with correct encoding
-        val inputStream = zipFile.getInputStream(chapterEntry)
-        val reader = BufferedReader(InputStreamReader(inputStream, Charset.forName("UTF-8")))
-        val content = reader.readText()
-        reader.close()
-        inputStream.close()
-        zipFile.close()
-
-        promise.resolve(content)
     } catch (e: Exception) {
-        promise.reject("E_CHAPTER_ERROR", "Failed to extract chapter: ${e.localizedMessage}", e)
+        Log.e("EpubKitModule", "Error extracting chapter: ${e.message}", e)
+        promise.reject("E_EXTRACTING_ERROR", e.localizedMessage, e)
     }
 }
 
-  }
+}
+
+private fun extractSpine(zipFile: ZipFile, opfPath: String): List<String> {
+    val opfEntry = zipFile.getEntry(opfPath) ?: throw Exception("content.opf not found at path: $opfPath")
+    val opfContent = zipFile.getInputStream(opfEntry).bufferedReader().use { it.readText() }
+    val document = Jsoup.parse(opfContent)
+
+    // Extract manifest (all available resources)
+    val manifest = mutableMapOf<String, String>()
+    document.select("manifest item").forEach { item ->
+        val id = item.attr("id")
+        val href = item.attr("href")
+        manifest[id] = "OEBPS/" + href.removePrefix("../")
+    }
+
+    // Extract spine (actual reading order)
+    val spineChapters = mutableListOf<String>()
+    document.select("spine itemref").forEach { itemref ->
+        val idref = itemref.attr("idref")
+        manifest[idref]?.let { spineChapters.add(it) }
+    }
+
+    return spineChapters
+}
+
+private fun extractChaptersFromSpine(zipFile: ZipFile, spinePaths: List<String>): List<Map<String, String>> {
+    val chapters = mutableListOf<Map<String, String>>()
+    var chapterCounter = 1
+    var currentChapterTitle: String? = null
+    var currentChapterParts = mutableListOf<String>()
+
+    for (path in spinePaths) {
+        val entry = zipFile.getEntry(path) ?: continue
+        val content = zipFile.getInputStream(entry).bufferedReader().use { it.readText() }
+        val document = Jsoup.parse(content)
+
+        val h1Title = document.selectFirst("h1")?.text()?.trim()
+        val titleTag = document.selectFirst("title")?.text()?.trim()
+        
+        if (h1Title != null) {
+            // Save the previous chapter if it had parts
+            if (currentChapterTitle != null) {
+                chapters.add(mapOf("title" to currentChapterTitle, "paths" to currentChapterParts.joinToString(",")))
+            }
+            // Start a new chapter
+            currentChapterTitle = h1Title
+            currentChapterParts = mutableListOf(path)
+        } else if (currentChapterTitle == null) {
+            // No h1 and no previous title → use title tag or fallback
+            currentChapterTitle = titleTag ?: "Chapter $chapterCounter"
+            currentChapterParts = mutableListOf(path)
+        } else {
+            // This is a continuation of the previous chapter
+            currentChapterParts.add(path)
+        }
+    }
+
+    // Add the last chapter if it exists
+    if (currentChapterTitle != null) {
+        chapters.add(mapOf("title" to currentChapterTitle, "paths" to currentChapterParts.joinToString(",")))
+    }
+
+    return chapters
+}
+
+private fun extractResourcePaths(chapterHtml: String): List<String> {
+    val document = Jsoup.parse(chapterHtml)
+    val resourcePaths = mutableListOf<String>()
+
+    // Extract CSS files
+    document.select("link[rel=stylesheet]").forEach { element ->
+        element.attr("href")?.let { 
+            val fixedPath = "OEBPS/" + it.removePrefix("../")
+            resourcePaths.add(fixedPath) 
+        }
+    }
+
+    // Extract Images
+    document.select("img").forEach { element ->
+        element.attr("src")?.let { 
+            val fixedPath = "OEBPS/" + it.removePrefix("../")
+            resourcePaths.add(fixedPath) 
+        }
+    }
+
+    // Extract Fonts from @font-face
+    document.select("style").forEach { styleElement ->
+        val css = styleElement.data()
+        val fontMatches = Regex("""url\(['"]?([^'"\)]+)['"]?\)""").findAll(css)
+        fontMatches.forEach { match ->
+            val fixedPath = "OEBPS/" + match.groupValues[1].removePrefix("../")
+            resourcePaths.add(fixedPath)
+        }
+    }
+
+    return resourcePaths
+}
+
+private fun extractResources(zipFile: ZipFile, resourcePaths: List<String>): Map<String, ByteArray> {
+    val extractedResources = mutableMapOf<String, ByteArray>()
+
+    for (resourcePath in resourcePaths) {
+        val entry = zipFile.getEntry(resourcePath) ?: continue
+        val resourceData = zipFile.getInputStream(entry).readBytes()
+        extractedResources[resourcePath] = resourceData
+    }
+
+    return extractedResources
+}
 
 
   private fun readFileFromZip(epubFilePath: String, filePath: String): String? {
@@ -401,7 +530,9 @@ private fun parseNcxToc(inputStream: InputStream): List<Map<String, String>> {
                 when (parser.name) {
                     "navLabel" -> title = extractText(parser) // Fix: Extract text safely
                     "content" -> {
-                        href = parser.getAttributeValue(null, "src")?.trim()
+                        href = parser.getAttributeValue(null, "src")?.trim()?.let { path ->
+                            if (path.startsWith("OEBPS/")) path else "OEBPS/$path"
+                        }
                     }
                 }
             }
@@ -447,7 +578,9 @@ private fun parseNavToc(inputStream: InputStream): List<Map<String, String>> {
         when (eventType) {
             XmlPullParser.START_TAG -> {
                 if (parser.name == "a") {
-                    href = parser.getAttributeValue(null, "href")?.trim()
+                    href = parser.getAttributeValue(null, "href")?.trim()?.let { path ->
+                        if (path.startsWith("OEBPS/")) path else "OEBPS/$path"
+                    }
                     title = extractText(parser) // Fix: Extract text properly
                     // Log.d("EpubKitModule", "Found NAV TOC entry: Title=$title, Href=$href")
                 }

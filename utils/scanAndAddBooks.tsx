@@ -1,4 +1,4 @@
-import { useBookStore } from "~/stores/bookStore"; // Import Zustand store
+import { Chapter, useBookStore } from "~/stores/bookStore"; // Import Zustand store
 import * as EpubKit from '~/modules/epub-kit';
 import * as Crypto from 'expo-crypto';
 import Toast from 'react-native-toast-message';
@@ -31,8 +31,29 @@ export default async function scanAndAddBooks() {
         Crypto.CryptoDigestAlgorithm.SHA1,
         metadata.title + metadata.author
       );
+      const parsedChapters: Chapter[] = JSON.parse(metadata.chapters); // Convert string to array
 
-      const newBook = { ...metadata, path: bookPath, addedAt: Date.now(), id };
+      const transformedChapters = parsedChapters.flatMap((chapter: Chapter) => {
+        if (!chapter.paths || typeof chapter.paths !== "string") {
+          console.warn(`Invalid paths for chapter: ${chapter.title}`, chapter);
+          return []; // Skip invalid entries
+        }
+
+        return chapter.paths.split(",").map((path: string, index: number) => ({
+          title: index === 0 ? chapter.title : `${chapter.title} (Part ${index + 1})`,
+          paths: path.trim(),
+        }));
+      });
+
+
+      const newBook = {
+        ...metadata,
+        path: bookPath,
+        addedAt: Date.now(),
+        id,
+        chapters: transformedChapters, // Store transformed chapters
+      };
+
       batch.push(newBook);
 
       if (batch.length >= batchSize) {

@@ -2,18 +2,24 @@ import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+export type Chapter = {
+  title: string;
+  paths: string;
+};
+
 export type Category = "Light Novel" | "Web Novel" | "Manga" | "Comic" | "Book";
 
 export type Book = {
   id: string;
   title: string;
   author: string;
-  coverImage: string;
-  language: string;
-  category: string[];
+  coverImage?: string;
+  language?: string;
+  category?: string[];
   description?: string;
   path?: string;  // Path for local files (if EPUB/PDF)
-  volumes?: string[]; // Only for Light Novels (list of volume file paths)
+  chapters?: Chapter[]; // Only for Web Novels (list of chapter file paths)
+  volumes?: string; // Only for Light Novels (list of volume file paths)
   addedAt?: number;
   externalLink?: string; // Store external sources for the book
 };
@@ -23,6 +29,7 @@ type BookStore = {
   getBook: (id: string) => Book | undefined;
   getBookIds: () => string[];
   getBooks: () => Record<string, Book>;
+  getChapters: (bookId: string) => Chapter[];
   addBook: (book: Book) => void;
   addBooks: (books: Book[]) => void;
   updateBook: (id: string, data: Partial<Book>) => void;
@@ -79,7 +86,9 @@ export const useBookStore = create<BookStore & { hydrated: boolean }>()(
           return { books: newBooks };
         }),
 
-
+      getChapters(bookId) {
+        return get().books[bookId]?.chapters || [];
+      },
 
       updateBook: (id, data) =>
         set((state) => ({
@@ -99,7 +108,6 @@ export const useBookStore = create<BookStore & { hydrated: boolean }>()(
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: (state) => {
         state.hydrated = true; // Mark hydration as complete
-        console.log("Hydrated:", state.hydrated);
       },
     }
   )
