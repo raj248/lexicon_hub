@@ -7,9 +7,7 @@ export default async function processChapter(bookId: string): Promise<string | n
     if (!book) return null;
 
     const chapters = book.chapters;
-    console.log(chapters)
-    const chapter = await EpubKit.getChapter(book.path || "", chapters ? chapters[0].paths : "");
-    console.log(chapter)
+    const chapter = await EpubKit.getChapter(book.path || "", chapters ? chapters[11].paths : "");
 
     if (!chapter) {
       console.log("Chapter not found.");

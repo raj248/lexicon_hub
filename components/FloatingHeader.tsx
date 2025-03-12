@@ -1,36 +1,81 @@
-import React, { useState } from "react";
-import { Animated } from "react-native";
-import { Appbar } from "react-native-paper";
+import React, { useState, useEffect } from "react";
+import { View, Text, Switch } from "react-native";
+import { Appbar, Card } from "react-native-paper";
+import { useColorScheme } from "~/lib/useColorScheme";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
 
-export default function FloatingHeader({ onSettingsPress }: { onSettingsPress: () => void }) {
-  const [visible, setVisible] = useState(true);
-  const animation = new Animated.Value(visible ? 1 : 0);
+export default function FloatingHeader({ headerVisible }: { headerVisible: boolean }) {
+  const [settingsExpanded, setSettingsExpanded] = useState(false);
+  const translateY = useSharedValue(headerVisible ? 0 : -100);
+  const height = useSharedValue(60); // Default header height
+  const { colors } = useColorScheme();
 
-  function toggleHeader() {
-    Animated.timing(animation, {
-      toValue: visible ? 0 : 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => setVisible(!visible));
-  }
+  // Expand header height when settings are opened
+  useEffect(() => {
+    // if (headerVisible)
+    height.value = withTiming(settingsExpanded ? 200 : 60, { duration: 400 });
+  }, [settingsExpanded]);
+
+  // Collapse settings if header disappears
+  useEffect(() => {
+    if (!headerVisible) {
+      setSettingsExpanded(false);
+    }
+    translateY.value = withTiming(headerVisible ? 0 : -100, { duration: 300 });
+  }, [headerVisible]);
+
+  const animatedStyles = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    height: height.value,
+  }));
 
   return (
     <Animated.View
-      style={{
-        position: "absolute",
-        top: animation.interpolate({ inputRange: [0, 1], outputRange: [-60, 0] }),
-        width: "100%",
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        paddingTop: 30,
-        paddingBottom: 10,
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 10,
-      }}
+      style={[
+        {
+          position: "absolute",
+          alignSelf: "center",
+          backgroundColor: "grey",
+          borderRadius: 16,
+          paddingHorizontal: 10,
+          width: "90%",
+          elevation: 4,
+        },
+        animatedStyles,
+      ]}
     >
-      <Appbar.Action icon="bookmark" onPress={() => console.log("Bookmark added")} />
-      <Appbar.Action icon="cog" onPress={onSettingsPress} />
+      {/* Floating Header */}
+      <Appbar.Header
+        mode="small"
+        style={{
+          backgroundColor: "transparent",
+          width: "100%",
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flex: 1 }}>
+          <Appbar.BackAction onPress={() => { }} color={colors.background} />
+          <Appbar.Action icon="bookmark" onPress={() => { }} color={colors.background} />
+          <Appbar.Action icon="cog" onPress={() => setSettingsExpanded(!settingsExpanded)} color={colors.background} />
+        </View>
+      </Appbar.Header>
+
+      {/* Expanding Settings Panel */}
+      {settingsExpanded && (
+        <Card style={{ padding: 10, marginTop: 10 }}>
+          <Text style={{ fontSize: 18, marginBottom: 10 }}>Customization</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
+            <Text>Dark Mode</Text>
+            <Switch value={false} onValueChange={() => { }} />
+          </View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            <Text>Font Size</Text>
+            <Text>18px</Text>
+          </View>
+        </Card>
+      )}
     </Animated.View>
   );
 }
