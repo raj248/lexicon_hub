@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { View, TouchableOpacity, Dimensions, Modal, FlatList } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { View, Pressable, Dimensions, FlatList } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,7 +10,7 @@ import { Chapter } from "~/stores/bookStore";
 import { Text } from "~/components/nativewindui/Text";
 import { useRuntimeStore } from "~/stores/useRuntimeStore";
 
-interface ChapterListModalProps {
+interface ChapterDrawerProps {
   currentChapters: Chapter[] | undefined;
   callBack: (item: number) => void;
 }
@@ -18,47 +18,49 @@ interface ChapterListModalProps {
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
 
-export default function ChapterListModal({ currentChapters, callBack }: ChapterListModalProps) {
+export default function ChapterDrawer({ currentChapters, callBack }: ChapterDrawerProps) {
   const { toggleChapterList } = useRuntimeStore.getState();
   const chapterListVisibility = useRuntimeStore.getState().chapterListVisibility;
 
-  const translateX = useSharedValue(screenWidth);
+  const translateX = useSharedValue(screenWidth); // Start hidden off-screen (right)
   const overlayOpacity = useSharedValue(0);
   const [hidden, setHidden] = useState(!chapterListVisibility);
 
+  // Store FlatList reference
+  const flatListRef = useRef<FlatList>(null);
+  const scrollPosition = useRef(0);
+
   useEffect(() => {
     if (chapterListVisibility) {
-      setHidden(false); // Keep modal visible
-      translateX.value = withTiming(0, { duration: 500 });
-      overlayOpacity.value = withTiming(1, { duration: 500 });
+      setHidden(false);
+      translateX.value = withTiming(0, { duration: 200 });
+      overlayOpacity.value = withTiming(1, { duration: 200 });
     } else {
-      translateX.value = withTiming(screenWidth, { duration: 500 }, () => {
-        runOnJS(setHidden)(true); // Hide only after animation ends
+      translateX.value = withTiming(screenWidth, { duration: 200 }, () => {
+        runOnJS(setHidden)(true);
       });
-      overlayOpacity.value = withTiming(0, { duration: 500 });
+      overlayOpacity.value = withTiming(0, { duration: 200 });
     }
   }, [chapterListVisibility]);
 
-  const renderItem = useCallback(
-    ({ item, index }: { item: Chapter, index: number }) => (
-      <TouchableOpacity
-        onPress={() => callBack(index)}
-        style={{
-          paddingVertical: 12,
-          paddingHorizontal: 15,
-          borderBottomWidth: 1,
-          borderBottomColor: "rgba(255, 255, 255, 0.3)",
-        }}
-      >
-        <Text className="text-lg font-bold">{item.title}</Text>
-      </TouchableOpacity>
-    ),
-    []
-  );
+  const handleChapterSelection = useCallback((index: number) => {
+    flatListRef.current?.scrollToOffset({ offset: scrollPosition.current, animated: false });
+    callBack(index);
+  }, [callBack]);
+
+  const renderItem = useCallback(({ item, index }: { item: Chapter; index: number }) => (
+    <Pressable
+      onPress={() => handleChapterSelection(index)}
+      className="py-3 px-4 border-b border-gray-300"
+      android_ripple={{ color: "#ddd", borderless: false }}
+    >
+      <Text className="text-lg font-bold">{item.title}</Text>
+    </Pressable>
+  ), [handleChapterSelection]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
-    display: hidden ? "none" : "flex", // Hide modal instead of unmounting
+    display: hidden ? "none" : "flex",
   }));
 
   const overlayStyle = useAnimatedStyle(() => ({
@@ -66,56 +68,56 @@ export default function ChapterListModal({ currentChapters, callBack }: ChapterL
   }));
 
   return (
-    <Modal transparent visible={!hidden}>
-      <TouchableOpacity
-        style={{ flex: 1 }}
-        activeOpacity={1}
-        onPress={toggleChapterList}
-      >
-        <Animated.View
-          style={[
-            {
-              position: "absolute",
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              backgroundColor: "rgba(0,0,0,0.4)",
-            },
-            overlayStyle,
-          ]}
-        />
-      </TouchableOpacity>
+    <>
+      {/* Overlay to darken the background */}
+      {!hidden && (
+        <Pressable
+          style={{
+            position: "absolute",
+            width: screenWidth,
+            height: screenHeight,
+            backgroundColor: "rgba(0,0,0,0.4)",
+            zIndex: 999,
+          }}
+          onPress={toggleChapterList}
+        >
+          <Animated.View style={[overlayStyle]} />
+        </Pressable>
+      )}
 
+      {/* Right-Side Drawer Layout */}
       <Animated.View
         style={[
           {
             position: "absolute",
-            top: screenHeight * 0.15,
-            bottom: screenHeight * 0.15,
-            right: 20,
-            width: screenWidth * 0.65,
-            backgroundColor: "rgba(255, 255, 255, 0.25)",
-            borderRadius: 16,
-            padding: 15,
+            top: 0,
+            bottom: 0,
+            right: 0, // Now appearing from the right
+            width: screenWidth * 0.7,
+            backgroundColor: "transparent",
+            borderLeftWidth: 1,
+            borderColor: "#ddd",
             shadowColor: "#000",
             shadowOpacity: 0.3,
             shadowRadius: 10,
-            shadowOffset: { width: 0, height: 5 },
+            shadowOffset: { width: -5, height: 0 }, // Shadow on the left
+            zIndex: 1000, // Ensure it's on top of other components
           },
           animatedStyle,
         ]}
       >
-        {/* can use flashlist as well */}
         <FlatList
+          ref={flatListRef}
           data={currentChapters}
-          // keyExtractor={(item, index) => index.toString()}
-          // estimatedItemSize={100}
           showsVerticalScrollIndicator={false}
           renderItem={renderItem}
           contentContainerStyle={{ paddingVertical: 10 }}
+          onScroll={(event) => {
+            scrollPosition.current = event.nativeEvent.contentOffset.y;
+          }}
+          scrollEventThrottle={16}
         />
       </Animated.View>
-    </Modal>
+    </>
   );
 }

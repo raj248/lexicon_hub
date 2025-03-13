@@ -28,7 +28,7 @@ export default function FloatingHeader() {
 
   useEffect(() => {
     if (!headerVisibility) setSettingsExpanded(false);
-    translateX.value = withTiming(headerVisibility ? 0 : 100, { duration: 40 });
+    translateX.value = withTiming(headerVisibility ? 0 : 100, { duration: 0 });
   }, [headerVisibility]);
 
   const animatedStyles = useAnimatedStyle(() => ({

@@ -76,7 +76,7 @@ export default function ReaderScreen() {
     <TapGestureHandler
       onHandlerStateChange={handleTap}
       numberOfTaps={1}
-      maxDurationMs={100} // Reduce tap detection delay
+      maxDurationMs={200} // Reduce tap detection delay
       shouldCancelWhenOutside={false}
     >
       <SafeAreaView className="flex-1 mt-4">
