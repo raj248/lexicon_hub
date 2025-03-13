@@ -9,16 +9,16 @@ import { TapGestureHandler, State } from "react-native-gesture-handler";
 export default function ReaderScreen() {
   const { bookId } = useLocalSearchParams();
   const [chapterContent, setChapterContent] = useState<React.ReactNode[] | null>(null);
-  const { setHeaderVisible, toggleHeader } = useRuntimeStore();
+  const { setHeaderVisibility, toggleHeader } = useRuntimeStore();
   const navigation = useNavigation();
 
   useEffect(() => {
     StatusBar.setHidden(true, "fade");
-    setHeaderVisible(false);
+    setHeaderVisibility(false);
     navigation.setOptions({ headerShown: false });
     return () => {
       StatusBar.setHidden(false, "fade");
-      setHeaderVisible(true);
+      setHeaderVisibility(true);
     };
   }, []);
 

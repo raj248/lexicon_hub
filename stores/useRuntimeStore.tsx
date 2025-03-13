@@ -4,7 +4,7 @@ type RuntimeState = {
   isModalOpen: boolean;
   searchQuery: string;
   headerVisibility: boolean;
-  setHeaderVisible: (visible: boolean) => void;
+  setHeaderVisibility: (visible: boolean) => void;
   toggleHeader: () => void;
   setSearchQuery: (query: string) => void;
   setModalOpen: (open: boolean) => void;
@@ -16,6 +16,6 @@ export const useRuntimeStore = create<RuntimeState>((set) => ({
   searchQuery: '',
   setSearchQuery: (query) => set({ searchQuery: query }),
   headerVisibility: true,
-  setHeaderVisible: (visible) => set({ headerVisibility: visible }),
+  setHeaderVisibility: (visible) => set({ headerVisibility: visible }),
   toggleHeader: () => set((state) => ({ headerVisibility: !state.headerVisibility })),
 }));

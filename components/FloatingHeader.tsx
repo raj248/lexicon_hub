@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Switch } from "react-native";
+import { View, Text, Switch, Modal, TouchableWithoutFeedback } from "react-native";
 import { Appbar, Card } from "react-native-paper";
 import { useColorScheme } from "~/lib/useColorScheme";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
@@ -8,76 +8,68 @@ import { useRuntimeStore } from "~/stores/useRuntimeStore";
 
 export default function FloatingHeader() {
   const [settingsExpanded, setSettingsExpanded] = useState(false);
-  const { headerVisibility } = useRuntimeStore.getState();
-  const translateY = useSharedValue(headerVisibility ? 0 : -100);
-  const height = useSharedValue(60); // Default header height
+  const { headerVisibility, setHeaderVisibility } = useRuntimeStore(); // Ensure you have a setter
+  const translateX = useSharedValue(headerVisibility ? 0 : 100);
+  const width = useSharedValue(60);
   const { colors } = useColorScheme();
 
-  // Expand header height when settings are opened
   useEffect(() => {
-    height.value = withTiming(settingsExpanded ? 200 : 60, { duration: 400 });
+    width.value = withTiming(settingsExpanded ? 200 : 60, { duration: 400 });
   }, [settingsExpanded]);
 
-  // Collapse settings if header disappears
   useEffect(() => {
-    if (!headerVisibility) {
-      setSettingsExpanded(false);
-    }
-    translateY.value = withTiming(headerVisibility ? 20 : -100, { duration: 100 });
+    if (!headerVisibility) setSettingsExpanded(false);
+    translateX.value = withTiming(headerVisibility ? 0 : 100, { duration: 100 });
   }, [headerVisibility]);
 
   const animatedStyles = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    height: height.value,
+    transform: [{ translateX: translateX.value }],
+    width: width.value,
   }));
 
   return (
-    <Animated.View pointerEvents={"auto"}
-      style={[
-        {
-          position: "absolute",
-          alignSelf: "center",
-          backgroundColor: "grey",
-          borderRadius: 16,
-          paddingHorizontal: 10,
-          width: "auto",
-          elevation: 4,
-        },
-        animatedStyles,
-      ]}
-    >
-      {/* Floating Header */}
-      <Appbar.Header
-        mode="small"
-        style={{
-          backgroundColor: "transparent",
-          width: "100%",
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flex: 1 }} pointerEvents={"auto"}>
-          <Appbar.BackAction onPress={() => { router.back(); }} color={colors.background} />
-          <Appbar.Action icon="bookmark" onPress={() => { }} color={colors.background} />
-          <Appbar.Action icon="cog" onPress={() => setSettingsExpanded(!settingsExpanded)} color={colors.background} />
-        </View>
-      </Appbar.Header>
+    <Modal transparent visible={headerVisibility}>
+      <TouchableWithoutFeedback onPress={() => setHeaderVisibility(false)}>
+        <View style={{ flex: 1 }}>
+          <Animated.View
+            pointerEvents="auto"
+            style={[
+              {
+                position: "absolute",
+                right: 10,
+                top: "30%",
+                backgroundColor: "grey",
+                borderRadius: 16,
+                paddingVertical: 10,
+                alignItems: "center",
+                elevation: 4,
+              },
+              animatedStyles,
+            ]}
+          >
+            <View style={{ flexDirection: "column", alignItems: "center" }}>
+              <Appbar.Action icon="arrow-left" onPress={() => router.back()} color={colors.background} />
+              <Appbar.Action icon="bookmark" onPress={() => { }} color={colors.background} />
+              <Appbar.Action icon="cog" onPress={() => setSettingsExpanded(!settingsExpanded)} color={colors.background} />
+              <Appbar.Action icon="file-document-outline" onPress={() => setSettingsExpanded(!settingsExpanded)} color={colors.background} />
+            </View>
 
-      {/* Expanding Settings Panel */}
-      {settingsExpanded && (
-        <Card style={{ padding: 10, marginTop: 10 }}>
-          <Text style={{ fontSize: 18, marginBottom: 10 }}>Customization</Text>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
-            <Text>Dark Mode</Text>
-            <Switch value={false} onValueChange={() => { }} />
-          </View>
-          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <Text>Font Size</Text>
-            <Text>18px</Text>
-          </View>
-        </Card>
-      )}
-    </Animated.View>
+            {settingsExpanded && (
+              <Card style={{ padding: 10, marginTop: 10 }}>
+                <Text style={{ fontSize: 18, marginBottom: 10 }}>Customization</Text>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
+                  <Text>Dark Mode</Text>
+                  <Switch value={false} onValueChange={() => { }} />
+                </View>
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                  <Text>Font Size</Text>
+                  <Text>18px</Text>
+                </View>
+              </Card>
+            )}
+          </Animated.View>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
   );
 }
