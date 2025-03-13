@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, TextInput, Pressable, Keyboard, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from '~/lib/useColorScheme';
-import { useLibraryStore } from '~/stores/useLibraryStore';
+import { useRuntimeStore } from '~/stores/useRuntimeStore';
 import { SettingsIcon } from '~/components/SettingsIcon';
 import Animated, { runOnJS, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Icon } from '@roninoss/icons';
@@ -15,7 +15,7 @@ interface FloatingHeaderProps {
 
 export function FloatingHeader({ title, showSearchBar = true, showSettingsIcon = true }: FloatingHeaderProps) {
   const { colors, isDarkColorScheme } = useColorScheme();
-  const { setSearchQuery } = useLibraryStore();
+  const { setSearchQuery } = useRuntimeStore();
   const [inputValue, setInputValue] = useState('');
   const [searchVisible, setSearchVisible] = useState(false);
 

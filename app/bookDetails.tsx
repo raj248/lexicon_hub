@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, Linking, StyleSheet } from "react-native";
+import { View, TouchableOpacity, Linking, StyleSheet, StatusBar } from "react-native";
 import { Text } from "~/components/nativewindui/Text";
 import { ScrollView } from "react-native-gesture-handler";
 import { Picker, PickerItem } from "~/components/nativewindui/Picker";
@@ -10,6 +10,7 @@ import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { Button } from "~/components/Button";
 import { Image } from "expo-image";
 import * as EpubKit from '~/modules/epub-kit';
+import { Icon } from "react-native-paper";
 
 export default function BookDetailsScreen() {
   const { colors } = useColorScheme();
@@ -26,6 +27,13 @@ export default function BookDetailsScreen() {
     if (book) navigation.setOptions({ title: book.title });
   }, [book, navigation]);
 
+  useEffect(() => {
+    StatusBar.setHidden(true, "fade");
+    navigation.setOptions({ headerShown: false });
+    return () => {
+      StatusBar.setHidden(false, "fade");
+    };
+  }, []);
   const handleSyncStatus = () => {
     console.log("Syncing book status..."); // To be integrated later
   };
@@ -44,9 +52,13 @@ export default function BookDetailsScreen() {
       {/* Content */}
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 80 }}>
         {/* Foreground Image */}
+        <View className="flex-row mt-4 justify-between items-center">
+          <TouchableOpacity onPress={() => router.back()}>
+            <Icon size={40} source="chevron-left" color="white" />
+          </TouchableOpacity>
+          <Text className="text-center mx-4 my-4" style={styles.title}>{book.title}</Text>
+        </View>
 
-
-        <Text style={styles.title}>{book.title}</Text>
         <Text style={styles.author}>{book.author}</Text>
         {Array.isArray(book.category) && book.category.length > 0 ? (
           <View className="flex-row flex-wrap gap-2 mt-2">

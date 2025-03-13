@@ -3,26 +3,28 @@ import { View, Text, Switch } from "react-native";
 import { Appbar, Card } from "react-native-paper";
 import { useColorScheme } from "~/lib/useColorScheme";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
+import { router } from "expo-router";
+import { useRuntimeStore } from "~/stores/useRuntimeStore";
 
-export default function FloatingHeader({ headerVisible }: { headerVisible: boolean }) {
+export default function FloatingHeader() {
   const [settingsExpanded, setSettingsExpanded] = useState(false);
-  const translateY = useSharedValue(headerVisible ? 0 : -100);
+  const { headerVisibility } = useRuntimeStore.getState();
+  const translateY = useSharedValue(headerVisibility ? 0 : -100);
   const height = useSharedValue(60); // Default header height
   const { colors } = useColorScheme();
 
   // Expand header height when settings are opened
   useEffect(() => {
-    // if (headerVisible)
     height.value = withTiming(settingsExpanded ? 200 : 60, { duration: 400 });
   }, [settingsExpanded]);
 
   // Collapse settings if header disappears
   useEffect(() => {
-    if (!headerVisible) {
+    if (!headerVisibility) {
       setSettingsExpanded(false);
     }
-    translateY.value = withTiming(headerVisible ? 0 : -100, { duration: 300 });
-  }, [headerVisible]);
+    translateY.value = withTiming(headerVisibility ? 20 : -100, { duration: 100 });
+  }, [headerVisibility]);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -30,7 +32,7 @@ export default function FloatingHeader({ headerVisible }: { headerVisible: boole
   }));
 
   return (
-    <Animated.View
+    <Animated.View pointerEvents={"auto"}
       style={[
         {
           position: "absolute",
@@ -38,7 +40,7 @@ export default function FloatingHeader({ headerVisible }: { headerVisible: boole
           backgroundColor: "grey",
           borderRadius: 16,
           paddingHorizontal: 10,
-          width: "90%",
+          width: "auto",
           elevation: 4,
         },
         animatedStyles,
@@ -55,8 +57,8 @@ export default function FloatingHeader({ headerVisible }: { headerVisible: boole
           justifyContent: "center",
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flex: 1 }}>
-          <Appbar.BackAction onPress={() => { }} color={colors.background} />
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flex: 1 }} pointerEvents={"auto"}>
+          <Appbar.BackAction onPress={() => { router.back(); }} color={colors.background} />
           <Appbar.Action icon="bookmark" onPress={() => { }} color={colors.background} />
           <Appbar.Action icon="cog" onPress={() => setSettingsExpanded(!settingsExpanded)} color={colors.background} />
         </View>

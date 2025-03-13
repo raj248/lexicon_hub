@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { View, Pressable, InteractionManager } from 'react-native';
 import { Text } from '~/components/nativewindui/Text';
 import { FlatGrid } from 'react-native-super-grid'; // ✅ Auto Grid Layout
-import { useLibraryStore } from '~/stores/useLibraryStore';
+import { useRuntimeStore } from '~/stores/useRuntimeStore';
 import { Image } from 'expo-image';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { useRouter } from 'expo-router';
-import Animated, { BounceIn, BounceInUp, BounceOut, Easing, FadeIn, FadeInUp, LinearTransition, SlideInRight } from "react-native-reanimated";
+import Animated, { BounceIn, BounceInUp, BounceOut, Easing, FadeInUp, LinearTransition, SlideInRight } from "react-native-reanimated";
 import { Button } from '~/components/Button';
 import { RefreshControl, ScrollView } from 'react-native-gesture-handler';
 import scanAndAddBooks from '~/utils/scanAndAddBooks';
@@ -47,7 +47,7 @@ const dummyWatchers = {
 export default function LibraryTab() {
 
   const { books, debugClear } = useBookStore();
-  const { searchQuery } = useLibraryStore();
+  const { searchQuery } = useRuntimeStore();
   const { colors } = useColorScheme();
   const router = useRouter();
 

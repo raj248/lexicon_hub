@@ -1,84 +1,108 @@
-import { useBookStore } from "~/stores/bookStore"; // Adjust import as needed
-import * as EpubKit from "~/modules/epub-kit"; // Ensure correct import
-
-export default async function processChapter(bookId: string): Promise<string | null> {
+import { useBookStore } from "~/stores/bookStore";
+import * as EpubKit from "~/modules/epub-kit";
+import React from "react";
+import { decode } from "html-entities"; // For decoding HTML entities
+import { Text } from "~/components/nativewindui/Text";
+import { Image } from "expo-image";
+export default async function processChapter(bookId: string): Promise<React.ReactNode[]> {
   try {
     const book = await useBookStore.getState().getBook(bookId);
-    if (!book) return null;
+    if (!book) return [];
 
     const chapters = book.chapters;
-    const chapter = await EpubKit.getChapter(book.path || "", chapters ? chapters[11].paths : "");
+    const index = 11
+    const chapter = await EpubKit.getChapter(book.path || "", chapters ? chapters[index].paths : "");
+    const title = chapters ? chapters[index].title : "";
 
     if (!chapter) {
       console.log("Chapter not found.");
-      return null
+      return [];
     }
 
-    function replaceOEBPS(filePath: string): string {
-      return filePath.replace(/^OEBPS\//, "../");
-    }
     function restoreOEBPS(filePath: string): string {
       return filePath.replace(/^\.\.\//, "OEBPS/");
     }
+    function parseInlineHTML(text: string): React.ReactNode {
+      // Regex for inline tags like <em>, <strong>, <b>, <i>
+      const inlineRegex = /(<(em|i|strong|b)>(.*?)<\/\2>)/g;
+      const parts: React.ReactNode[] = [];
 
-    function injectBase64Images(htmlContent: string, resources: Record<string, string>): string {
-      return htmlContent.replace(/<img [^>]*src=["']([^"']+)["'][^>]*>/g, (match, src) => {
-        const normalizedSrc = restoreOEBPS(src);
-        console.log(normalizedSrc)
-        if (resources[normalizedSrc]) {
-          console.log("found")
-          const base64Data = resources[normalizedSrc];
-          const mimeType = normalizedSrc.endsWith(".png") ? "image/png" : "image/jpeg"; // Adjust as needed
-          return match.replace(src, `data:${mimeType};base64,${base64Data}`);
+      let lastIndex = 0;
+      text.replace(inlineRegex, (match, fullMatch, tag, content, offset) => {
+        if (offset > lastIndex) {
+          parts.push(decode(text.slice(lastIndex, offset))); // Add previous text
         }
-        return match; // If no match, keep the original
+
+        // Style inline elements accordingly
+        const styledElement =
+          tag === "em" || tag === "i" ? (
+            <Text key={offset} style={{ fontStyle: "italic" }}>{decode(content)}</Text>
+          ) : (
+            <Text key={offset} style={{ fontWeight: "bold" }}>{decode(content)}</Text>
+          );
+
+        parts.push(styledElement);
+        lastIndex = offset + fullMatch.length;
+        return match;
       });
+
+      // Push remaining text
+      if (lastIndex < text.length) {
+        parts.push(decode(text.slice(lastIndex)));
+      }
+
+      return parts.length === 1 ? parts[0] : parts;
     }
 
-    // Inject CSS styles
-    let styledContent = chapter.content.replace(
-      "</head>",
-      `<style>
-        body { 
-          font-family: 'Arial', sans-serif; 
-          line-height: 1.8; 
-          color: #333; 
-          margin: 20px; 
-          padding: 20px; 
-          font-size: 18px; 
-        }
-        h1 { 
-          color: #444; 
-          text-align: center; 
-          font-size: 24px; 
-        }
-        p { 
-          margin: 12px 0; 
-          font-size: 20px; 
-        }
-        .centerp { 
-          text-align: center; 
-          font-weight: bold; 
-          font-size: 18px; 
-        }
-        img { 
-          display: block; 
-          max-width: 100%; 
-          height: auto; 
-          margin: 10px auto; 
-          padding: 10px; 
-          border-radius: 30px;
-        }
-      </style></head>`
-    );
+    function parseHTML(htmlContent: string, resources: Record<string, string>): React.ReactNode[] {
+      const parsedNodes: React.ReactNode[] = [];
+      parsedNodes.push(
+        <Text key={parsedNodes.length}
+          style={{ fontSize: 24, fontWeight: "bold" }}
+          className="text-center mx-4 my-4"
+        >
+          {title}
+        </Text>
+      )
 
+      // Extract paragraphs and images
+      const regex = /<p[^>]*>(.*?)<\/p>|<img [^>]*src=["']([^"']+)["'][^>]*>/g;
+      let match;
 
-    // Inject Base64 images
-    styledContent = injectBase64Images(styledContent, chapter.resources);
+      while ((match = regex.exec(htmlContent)) !== null) {
+        if (match[1]) {
+          // Text paragraph with inline formatting
+          parsedNodes.push(
+            <Text key={parsedNodes.length} style={{ fontSize: 18, marginBottom: 10 }}>
+              {parseInlineHTML(match[1])}
+            </Text>
+          );
+        } else if (match[2]) {
+          // Image
+          const normalizedSrc = restoreOEBPS(match[2]);
+          if (resources[normalizedSrc]) {
+            parsedNodes.push(
+              <Image
+                key={parsedNodes.length}
+                source={{ uri: `data:image/jpeg;base64,${resources[normalizedSrc]}` }}
+                style={{
+                  width: "100%",
+                  height: 200,
+                  resizeMode: "contain",
+                  borderRadius: 10,
+                  marginVertical: 10,
+                }}
+              />
+            );
+          }
+        }
+      }
+      return parsedNodes;
+    }
 
-    return styledContent;
+    return parseHTML(chapter.content, chapter.resources);
   } catch (error) {
     console.error("Error processing chapter:", error);
-    return null;
+    return [];
   }
 }

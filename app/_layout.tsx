@@ -48,6 +48,7 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" options={TABS_OPTIONS} />
                 <Stack.Screen name="settings" options={SETTINGS_OPTIONS} />
                 <Stack.Screen name="bookDetails" options={DETAILS_OPTIONS} />
+                <Stack.Screen name='reader' />
               </Stack>
               <Toast />
             </NavThemeProvider>
