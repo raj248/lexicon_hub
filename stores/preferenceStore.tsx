@@ -3,25 +3,35 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 // 3️⃣ Preferences Store (User Settings)
-type PreferencesData = {
+export type PreferencesData = {
   readingMode?: "Light" | "Dark" | "Sepia";
-  fontSize?: number;
-  isFavorite?: boolean;
-  notes?: string;
+  fontSize: number;
 };
 
 type PreferencesStore = {
-  preferences: Record<string, PreferencesData>;
-  updatePreferences: (id: string, prefs: Partial<PreferencesData>) => void;
+  preferences: PreferencesData;
+  setFontSize: (fontSize: number) => void;
+  updatePreferences: (prefs: Partial<PreferencesData>) => void;
 };
 
 export const usePreferencesStore = create<PreferencesStore>()(
   persist(
     (set) => ({
-      preferences: {},
-      updatePreferences: (id, prefs) =>
+      preferences: {
+        readingMode: "Light",
+        fontSize: 24,
+      },
+
+      // Update preferences
+      updatePreferences: (prefs) =>
         set((state) => ({
-          preferences: { ...state.preferences, [id]: { ...state.preferences[id], ...prefs } },
+          preferences: { ...state.preferences, ...prefs },
+        })),
+
+      // Set Font Size
+      setFontSize: (fontSize) =>
+        set((state) => ({
+          preferences: { ...state.preferences, fontSize },
         })),
     }),
     {

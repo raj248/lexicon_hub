@@ -2,7 +2,6 @@ import { NativeModule, requireNativeModule } from 'expo';
 
 
 declare class EpubKitModule extends NativeModule {
-  getTheme(): string;
   requestStoragePermission(): Promise<boolean>;
   scanFiles(): Promise<string[]>;
   extractMetadata(filePath:string): Promise<any>

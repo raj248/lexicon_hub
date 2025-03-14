@@ -92,10 +92,10 @@ export default function BookDetailsScreen() {
               selectedValue={readingStatus}
               onValueChange={(status) => setReadingStatus(status)}
             >
-              <PickerItem style={{ fontSize: 15 }} label="Not Started" value="Not Started" color={colors.foreground} />
-              <PickerItem style={{ fontSize: 15 }} label="Reading" value="Reading" color={colors.foreground} />
-              <PickerItem style={{ fontSize: 15 }} label="Completed" value="Completed" color={colors.foreground} />
-              <PickerItem style={{ fontSize: 15 }} label="Dropped" value="Dropped" color={colors.foreground} />
+              <PickerItem style={{ fontSize: 15 }} label="Not Started" value="Not Started" color="black" />
+              <PickerItem style={{ fontSize: 15 }} label="Reading" value="Reading" color="black" />
+              <PickerItem style={{ fontSize: 15 }} label="Completed" value="Completed" color="black" />
+              <PickerItem style={{ fontSize: 15 }} label="Dropped" value="Dropped" color="black" />
             </Picker>
           </View>
         </View>

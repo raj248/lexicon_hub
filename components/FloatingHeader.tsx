@@ -8,18 +8,31 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { router } from "expo-router";
-import { useRuntimeStore } from "~/stores/useRuntimeStore";
+import { Text } from "./nativewindui/Text";
+import { usePreferencesStore } from "~/stores/preferenceStore";
 
-export default function FloatingHeader() {
+export default function FloatingHeader({ headerVisibility, toggleChapterList, setHeaderVisibility }: any) {
   const [settingsExpanded, setSettingsExpanded] = useState(false);
-  const { setHeaderVisibility, toggleChapterList } = useRuntimeStore();
-  const headerVisibility = useRuntimeStore.getState().headerVisibility;
+
   const translateX = useSharedValue(headerVisibility ? 0 : 100);
   const width = useSharedValue(60);
   const newViewOpacity = useSharedValue(0);
   const newViewTranslateX = useSharedValue(50);
-  const { colors } = useColorScheme();
 
+  const { preferences, setFontSize } = usePreferencesStore();
+
+
+  const { colors, isDarkColorScheme, toggleColorScheme } = useColorScheme();
+  const [switching, setSwitching] = useState(false);
+
+  const handleToggle = async () => {
+    if (switching) return; // Prevent spam clicking
+    setSwitching(true);
+    requestAnimationFrame(() => {
+      toggleColorScheme(); // Switch theme
+      setTimeout(() => setSwitching(false), 200); // Allow UI to update
+    });
+  };
   useEffect(() => {
     width.value = withTiming(settingsExpanded ? 300 : 60, { duration: 400 });
     newViewOpacity.value = withTiming(settingsExpanded ? 1 : 0, { duration: 300 });
@@ -75,12 +88,14 @@ export default function FloatingHeader() {
 
             {/* New View (Visible After Expansion) */}
             <Animated.View
+              // pointerEvents={settingsExpanded ? "none" : "auto"}
               style={[
                 {
                   flex: 1,
+                  height: "auto",
                   justifyContent: "center",
                   alignItems: "center",
-                  backgroundColor: "rgba(255,255,255,0.1)",
+                  backgroundColor: "transparent",
                   borderRadius: 10,
                   padding: 10,
                   marginRight: 10,
@@ -88,7 +103,30 @@ export default function FloatingHeader() {
                 newViewStyles,
               ]}
             >
-              <Appbar.Action icon="cog" onPress={() => { }} color={colors.background} />
+              <View className="flex-row justify-between items-center">
+                <Text className="text-white">Change Theme</Text>
+                <Appbar.Action
+                  icon={isDarkColorScheme ? "weather-sunny" : "weather-night"}
+                  onPress={handleToggle}
+                  color={colors.background}
+                  disabled={switching}
+                  style={{ margin: "auto", padding: "auto" }}
+                />
+              </View>
+              <View className="flex-row justify-between items-center">
+                <Text className="text-white">Font </Text>
+                <Appbar.Action
+                  icon="chevron-left"
+                  onPress={() => { setFontSize(preferences.fontSize - 1) }}
+                  color={colors.background}
+                />
+                <Text className="text-white">{preferences.fontSize}</Text>
+                <Appbar.Action
+                  icon="chevron-right"
+                  onPress={() => { setFontSize(preferences.fontSize + 1) }}
+                  color={colors.background}
+                />
+              </View>
             </Animated.View>
 
 

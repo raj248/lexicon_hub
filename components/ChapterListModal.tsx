@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { View, Pressable, Dimensions, FlatList } from "react-native";
+import { View, Pressable, Dimensions, Modal, FlatList } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -11,6 +11,8 @@ import { Text } from "~/components/nativewindui/Text";
 import { useRuntimeStore } from "~/stores/useRuntimeStore";
 
 interface ChapterDrawerProps {
+  toggleChapterList: () => void;
+  chapterListVisibility: boolean;
   currentChapters: Chapter[] | undefined;
   callBack: (item: number) => void;
 }
@@ -18,16 +20,15 @@ interface ChapterDrawerProps {
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
 
-export default function ChapterDrawer({ currentChapters, callBack }: ChapterDrawerProps) {
-  const { toggleChapterList } = useRuntimeStore.getState();
-  const chapterListVisibility = useRuntimeStore.getState().chapterListVisibility;
+export default function ChapterDrawer({ currentChapters, callBack, toggleChapterList, chapterListVisibility }: ChapterDrawerProps) {
 
-  const translateX = useSharedValue(screenWidth); // Start hidden off-screen (right)
+  const translateX = useSharedValue(screenWidth);
   const overlayOpacity = useSharedValue(0);
   const [hidden, setHidden] = useState(!chapterListVisibility);
 
-  // Store FlatList reference
+  // Store the FlatList reference
   const flatListRef = useRef<FlatList>(null);
+  // Store the last scroll position
   const scrollPosition = useRef(0);
 
   useEffect(() => {
@@ -35,6 +36,13 @@ export default function ChapterDrawer({ currentChapters, callBack }: ChapterDraw
       setHidden(false);
       translateX.value = withTiming(0, { duration: 200 });
       overlayOpacity.value = withTiming(1, { duration: 200 });
+
+      // setTimeout(() => {
+      //   if (flatListRef.current) {
+      //     flatListRef.current.scrollToOffset({ offset: scrollPosition.current, animated: false });
+      //   }
+      // }, 2000);
+      // runOnJS(toggleChapterList)();
     } else {
       translateX.value = withTiming(screenWidth, { duration: 200 }, () => {
         runOnJS(setHidden)(true);
@@ -44,6 +52,7 @@ export default function ChapterDrawer({ currentChapters, callBack }: ChapterDraw
   }, [chapterListVisibility]);
 
   const handleChapterSelection = useCallback((index: number) => {
+    // Save scroll position
     flatListRef.current?.scrollToOffset({ offset: scrollPosition.current, animated: false });
     callBack(index);
   }, [callBack]);
@@ -52,7 +61,7 @@ export default function ChapterDrawer({ currentChapters, callBack }: ChapterDraw
     <Pressable
       onPress={() => handleChapterSelection(index)}
       className="py-3 px-4 border-b border-gray-300"
-      android_ripple={{ color: "#ddd", borderless: false }}
+      android_ripple={{ color: "#ddd", borderless: false }} // Adds a ripple effect for feedback
     >
       <Text className="text-lg font-bold">{item.title}</Text>
     </Pressable>
@@ -68,40 +77,42 @@ export default function ChapterDrawer({ currentChapters, callBack }: ChapterDraw
   }));
 
   return (
-    <>
-      {/* Overlay to darken the background */}
-      {!hidden && (
-        <Pressable
-          style={{
-            position: "absolute",
-            width: screenWidth,
-            height: screenHeight,
-            backgroundColor: "rgba(0,0,0,0.4)",
-            zIndex: 999,
-          }}
-          onPress={toggleChapterList}
-        >
-          <Animated.View style={[overlayStyle]} />
-        </Pressable>
-      )}
+    <Modal transparent visible={!hidden}>
+      <Pressable
+        style={{ flex: 1 }}
+        // activeOpacity={1}
+        onPress={toggleChapterList}
+      >
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: "rgba(0,0,0,0.4)",
+            },
+            overlayStyle,
+          ]}
+        />
+      </Pressable>
 
-      {/* Right-Side Drawer Layout */}
       <Animated.View
         style={[
           {
             position: "absolute",
-            top: 0,
-            bottom: 0,
-            right: 0, // Now appearing from the right
-            width: screenWidth * 0.7,
-            backgroundColor: "transparent",
-            borderLeftWidth: 1,
-            borderColor: "#ddd",
+            top: screenHeight * 0.15,
+            bottom: screenHeight * 0.15,
+            right: 20,
+            width: screenWidth * 0.65,
+            backgroundColor: "grey",
+            borderRadius: 16,
+            padding: 15,
             shadowColor: "#000",
             shadowOpacity: 0.3,
             shadowRadius: 10,
-            shadowOffset: { width: -5, height: 0 }, // Shadow on the left
-            zIndex: 1000, // Ensure it's on top of other components
+            shadowOffset: { width: 0, height: 5 },
           },
           animatedStyle,
         ]}
@@ -116,8 +127,19 @@ export default function ChapterDrawer({ currentChapters, callBack }: ChapterDraw
             scrollPosition.current = event.nativeEvent.contentOffset.y;
           }}
           scrollEventThrottle={16}
+          onLayout={() => {
+            setTimeout(() => {
+              if (flatListRef.current) {
+                flatListRef.current.scrollToOffset({
+                  offset: scrollPosition.current,
+                  animated: true, // Set to false to avoid flickering
+                });
+              }
+            }, 50); // Slight delay to ensure rendering is completed
+          }}
+        // keyboardShouldPersistTaps="handled" // Smooth scrolling capture
         />
       </Animated.View>
-    </>
+    </Modal>
   );
 }
