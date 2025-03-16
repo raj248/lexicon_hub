@@ -1,0 +1,10 @@
+NEXT: modify reader.tsx to use epub-core
+
+Lazy Load Images & Fonts
+Only decode them when displayed.
+Downscale large images before rendering.
+
+Use SQLite for Metadata & Caching
+Store bookmarks, highlights, and progress in a local database.
+
+write a native function in FileUtils to open a zipFile and extract only require files

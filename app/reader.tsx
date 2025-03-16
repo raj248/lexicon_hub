@@ -95,7 +95,7 @@ export default function ReaderScreen() {
     <TapGestureHandler
       onHandlerStateChange={handleTap}
       numberOfTaps={1}
-      maxDurationMs={350} // Reduce tap detection delay
+      maxDurationMs={150} // Reduce tap detection delay
       shouldCancelWhenOutside={false}
       onBegan={() => {
         tapStartTime.current = performance.now(); // Capture tap start time

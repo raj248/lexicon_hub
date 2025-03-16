@@ -12,10 +12,10 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.Promise
 import java.io.File
+import android.util.Log
 import java.util.zip.ZipFile
 import org.jsoup.Jsoup
 import android.util.Base64
-import android.util.Log
 import com.google.gson.Gson
 
 class EpubKitModule : Module() {

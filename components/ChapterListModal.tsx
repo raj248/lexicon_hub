@@ -8,7 +8,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { Chapter } from "~/stores/bookStore";
 import { Text } from "~/components/nativewindui/Text";
-import { useRuntimeStore } from "~/stores/useRuntimeStore";
 
 interface ChapterDrawerProps {
   toggleChapterList: () => void;

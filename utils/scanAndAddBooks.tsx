@@ -1,11 +1,25 @@
 import { Chapter, useBookStore } from "~/stores/bookStore"; // Import Zustand store
 import * as EpubKit from '~/modules/epub-kit';
+import { RequestStoragePermission, ScanFiles } from "~/modules/FileUtil"
 import * as Crypto from 'expo-crypto';
 import Toast from 'react-native-toast-message';
 
 export default async function scanAndAddBooks() {
   try {
-    const books = await EpubKit.scanFiles();
+    const hasPermission = await RequestStoragePermission();
+    console.log("Storage permission:", hasPermission);
+
+    if (!hasPermission) {
+      Toast.show({
+        type: "error",
+        text1: "Storage permission denied",
+        text2: "Please enable storage permission in settings",
+      });
+      console.log("Storage permission denied");
+      return;
+    }
+
+    const books = await ScanFiles();
     console.log("Found books:", books.length);
 
     const existingBooks = useBookStore.getState().books; // Fetch existing books
@@ -13,11 +27,13 @@ export default async function scanAndAddBooks() {
 
     const batchSize = 2; // Process books in batches
     let batch = [];
+    console.log(books)
 
     for (const bookPath of books) {
       if (existingPaths.has(bookPath)) continue; // Skip if book already exists
 
       const metadata = await EpubKit.extractMetadata(bookPath).catch((err) => console.log(err));
+      console.log(metadata)
       if (!metadata) {
         Toast.show({
           type: "error",
@@ -53,7 +69,6 @@ export default async function scanAndAddBooks() {
         id,
         chapters: transformedChapters, // Store transformed chapters
       };
-
       batch.push(newBook);
 
       if (batch.length >= batchSize) {

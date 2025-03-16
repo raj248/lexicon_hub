@@ -1,19 +1,17 @@
 import { StyleSheet, View } from 'react-native';
 import { Text } from './nativewindui/Text';
-import EditScreenInfo from './EditScreenInfo';
+import Debug from './Debug';
 
 type ScreenContentProps = {
-  title: string;
-  path: string;
   children?: React.ReactNode;
 };
 
-export const ScreenContent = ({ title, path, children }: ScreenContentProps) => {
+export const ScreenContent = ({ children }: ScreenContentProps) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.title}>Debug Screen</Text>
       <View style={styles.separator} />
-      <EditScreenInfo path={path} />
+      <Debug />
       {children}
     </View>
   );

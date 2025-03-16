@@ -15,7 +15,9 @@ import { useEffect } from 'react';
 import * as NavigationBar from 'expo-navigation-bar';
 
 import * as EpubKit from 'modules/epub-kit';
+import * as FileUtil from 'modules/FileUtil'
 import Toast from 'react-native-toast-message';
+import { ReaderProvider } from '@epubjs-react-native/core';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -26,7 +28,8 @@ export default function RootLayout() {
   useEffect(() => {
     NavigationBar.setVisibilityAsync('hidden'); // ✅ Hide navigation bar
     NavigationBar.setBehaviorAsync('overlay-swipe'); // ✅ Show only when swiped
-    EpubKit.requestStoragePermission()
+    // EpubKit.requestStoragePermission()
+    FileUtil.RequestStoragePermission()
   }, []);
   useInitialAndroidBarSync();
   const { colorScheme, isDarkColorScheme } = useColorScheme();

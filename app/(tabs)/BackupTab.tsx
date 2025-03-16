@@ -11,6 +11,7 @@ export default function BackupSyncTab() {
 
   const handleBackup = async () => {
     setLoading(true);
+
     await backupNow({}, {}, {});
     setLoading(false);
   };
@@ -24,7 +25,6 @@ export default function BackupSyncTab() {
   return (
     <View className="flex-1 p-4 bg-white">
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-        {/* Backup Now Button */}
         <TouchableOpacity
           className="bg-blue-600 p-4 rounded-lg items-center mb-4"
           onPress={handleBackup}
@@ -33,7 +33,6 @@ export default function BackupSyncTab() {
           {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-semibold">Backup Now</Text>}
         </TouchableOpacity>
 
-        {/* Restore Button */}
         <TouchableOpacity
           className="bg-green-600 p-4 rounded-lg items-center mb-4"
           onPress={handleRestore}
@@ -42,13 +41,11 @@ export default function BackupSyncTab() {
           {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-semibold">Restore Backup</Text>}
         </TouchableOpacity>
 
-        {/* Auto Backup Toggle */}
         <View className="flex-row justify-between items-center p-4 bg-gray-100 rounded-lg mb-4">
           <Text className="font-semibold">Enable Auto Backup</Text>
           <Toggle value={autoBackup} onValueChange={setAutoBackup} />
         </View>
 
-        {/* Last Backup Timestamp */}
         <View className="p-4 bg-gray-100 rounded-lg mb-4">
           <Text className="font-semibold">Last Backup:</Text>
           <Text>{lastBackup ? new Date(lastBackup).toLocaleString() : "Never"}</Text>
