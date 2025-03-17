@@ -11,7 +11,7 @@ import { Button } from '~/components/Button';
 import { RefreshControl, ScrollView } from 'react-native-gesture-handler';
 import scanAndAddBooks from '~/utils/scanAndAddBooks';
 import { useBookStore } from '~/stores/bookStore';
-
+import { getRandomBlurhash } from '~/utils/blurhash';
 
 const dummyWatchers = {
   "1": {
@@ -51,6 +51,7 @@ export default function LibraryTab() {
   const { colors } = useColorScheme();
   const router = useRouter();
 
+
   const clear = () => {
     console.log("clearing")
     InteractionManager.runAfterInteractions(() => {
@@ -82,6 +83,20 @@ export default function LibraryTab() {
     });
   };
 
+  const CoverImage = ({ uri }: { uri?: string }) => {
+
+    const randomBlurhash = (uri) ? null : useMemo(getRandomBlurhash, []); // Ensure a consistent blurhash for each render
+
+    return (
+      <Image
+        source={{ uri: uri ? uri : null }}
+        style={{ width: "100%", height: 220, borderRadius: 8 }}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+        placeholder={{ blurhash: randomBlurhash }}
+      />
+    );
+  };
   return (
     <ScrollView
       className="flex-1"
@@ -116,12 +131,7 @@ export default function LibraryTab() {
                 className="p-2 rounded-lg"
                 onPress={() => InteractionManager.runAfterInteractions(() => router.push(`/bookDetails?bookId=${item.id}`))} style={{ backgroundColor: colors.card, width: "100%", height: 270 }}
               >
-                <Image
-                  source={{ uri: item.coverImage }}
-                  style={{ width: "100%", height: 220, borderRadius: 8 }}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                />
+                <CoverImage uri={item.coverImage} />
                 <View style={{ height: 36, justifyContent: "center" }}>
                   <Text className="text-center text-xs px-1" numberOfLines={2} ellipsizeMode="tail">
                     {item.title}

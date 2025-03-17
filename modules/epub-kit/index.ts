@@ -1,5 +1,5 @@
 import * as FileSystem from "expo-file-system";
-import { useImageManipulator, SaveFormat, ImageManipulator } from "expo-image-manipulator";
+import { SaveFormat, ImageManipulator } from "expo-image-manipulator";
 import EpubKit from "./src/EpubKitModule";
 import { Content, Metadata } from "./src/EpubKitModule.Types";
 

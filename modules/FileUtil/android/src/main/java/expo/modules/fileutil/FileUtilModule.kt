@@ -11,9 +11,13 @@ import androidx.core.content.ContextCompat
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.Promise
-import java.io.File
 import android.util.Log
 import java.net.URL
+import java.io.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import android.util.Base64
+import java.io.ByteArrayOutputStream
 
 class FileUtilModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -63,6 +67,37 @@ class FileUtilModule : Module() {
 
       scanDirectory(storageDir)
       promise.resolve(epubFiles)
+    }
+
+    AsyncFunction("readFileFromZip") { zipPath: String, filePathInZip: String, type: String, promise: Promise ->
+      try {
+          val zipFile = ZipFile(zipPath)
+          val entry: ZipEntry? = zipFile.getEntry(filePathInZip)
+
+          if (entry == null) {
+              promise.reject("E_FILE_NOT_FOUND", "File $filePathInZip not found in ZIP.", null)
+              zipFile.close()
+              return@AsyncFunction
+          }
+
+          val inputStream = zipFile.getInputStream(entry)
+
+          val result: String = if (type == "base64") {
+              // Read as binary and convert to Base64
+              val outputStream = ByteArrayOutputStream()
+              inputStream.copyTo(outputStream)
+              val byteArray = outputStream.toByteArray()
+              Base64.encodeToString(byteArray, Base64.NO_WRAP)
+          } else {
+              // Read as plain text
+              inputStream.bufferedReader().use { it.readText() }
+          }
+
+          zipFile.close()
+          promise.resolve(result)
+      } catch (e: Exception) {
+          promise.reject("E_READ_FAILED", "Failed to read file from ZIP: ${e.message}", e)
+      }
     }
   }
 }

@@ -1,25 +1,77 @@
 import { StyleSheet, View } from 'react-native';
 import { Text } from './nativewindui/Text';
 import { Button } from './nativewindui/Button';
-
+import * as FileSystem from "expo-file-system"
 import { EPUBHandler } from "epub-core"
-import { ScanFiles } from '~/modules/FileUtil';
+import { ScanFiles, readFileFromZip } from '~/modules/FileUtil';
 import { useEffect } from 'react';
+import { useBookStore } from '~/stores/bookStore';
 
 const className_button = 'm-4 p-4'
+const epubPath = "/storage/emulated/0/Books/The Ideal Sponger Life Vol 13.epub"
+const opfPath = "OEBPS/content.opf"
+const coverImage = "OEBPS/Images/Cover.jpg"
+
 export default function Debug() {
   const epub = new EPUBHandler()
   useEffect(() => {
+    // console.log(useBookStore.getState().books)
     const startAsync = async () => {
-      await epub.loadFile("/storage/emulated/0/Books/The Ideal Sponger Life Vol 13.epub")
+      // await epub.loadFile("file://storage/emulated/0/Books/The Ideal Sponger Life Vol 13.epub")
     }
     startAsync();
   }, [])
 
-  const onPressDebug = async () => {
-    const res = await epub.parseEPUB();
-    console.log(res.spine);
+  function onPressDebug() {
+    (async () => {
+      console.log("Start reading file...");
+
+      const startTime = performance.now(); // Start timer
+
+      const content = await readFileFromZip(epubPath, coverImage, "base64").catch(err => {
+        console.log("Error:", err);
+        return null;
+      });
+
+      const endTime = performance.now(); // End timer
+      console.log("Finished reading file.");
+
+      if (content) {
+        console.log("Content Length:", content.length);
+      }
+
+      console.log(`Execution Time: ${(endTime - startTime).toFixed(2)}ms`);
+
+      const runs = 1;
+      let totalTime = 0;
+      for (let i = 0; i < runs; i++) {
+        const start = performance.now();
+        await readFileFromZip(epubPath, coverImage, "base64");
+        const end = performance.now();
+        totalTime += end - start;
+      }
+      console.log(`Average Time: ${totalTime / runs}ms`);
+    })();
   }
+
+  function onPressEpubCore() {
+    (async () => {
+      console.log("Starting EPUB Load & Extract Test...");
+      const startLoad = performance.now();
+      await epub.loadFile("file://storage/emulated/0/Books/The Ideal Sponger Life Vol 13.epub", true);
+      const endLoad = performance.now();
+      console.log(`📖 EPUB Load Time: ${(endLoad - startLoad).toFixed(2)}ms`);
+
+      const startExtract = performance.now();
+      const content = await epub.extractChapter("Text/prologue.xhtml");
+      const endExtract = performance.now();
+      console.log(`📄 Chapter Extract Time: ${(endExtract - startExtract).toFixed(2)}ms`);
+
+      console.log(`✅ Total Execution Time: ${(endExtract - startLoad).toFixed(2)}ms`);
+      console.log("Extracted Content Length:", content?.length || 0);
+    })()
+  }
+
 
   function OnPressScan() {
     (async () => {
@@ -30,11 +82,11 @@ export default function Debug() {
 
   return (
     <View className='flex-1 justify-center items-center'>
-      <Button variant='secondary' className={className_button} onPress={() => {
-        console.log("Debug OnPress");
-        onPressDebug();
-      }}>
-        <Text>Debug</Text>
+      <Button variant='secondary' className={className_button} onPress={onPressDebug}>
+        <Text>Debug Images</Text>
+      </Button>
+      <Button variant='primary' className={className_button} onPress={onPressEpubCore}>
+        <Text>Epub Core</Text>
       </Button>
       <Button variant='tonal' onPress={OnPressScan}>
         <Text>Scan Files</Text>

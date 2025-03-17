@@ -1,14 +1,14 @@
 import * as FileSystem from "expo-file-system";
 import { clearCacheFolder, extractAndRewriteImages, extractResourceBase64 } from "../utils/resourceUtils";
 import { injectStyles } from "../utils/styleUtils";
-import JSZip from "jszip";
+import { readFileFromZip } from "~/modules/FileUtil";
 
 const CACHE_DIR = `${FileSystem.cacheDirectory}epub_resources/`;
 
-export async function processChapter(zip:JSZip, path: string): Promise<string | null> {
+export async function processChapter(zipPath: string, path: string): Promise<string | null> {
   try {
     console.log("Path to chapter: ",path)
-    const chapter = await zip.file(path)?.async("string");
+    const chapter = await readFileFromZip(zipPath, path);
     if (!chapter) {
       console.log("Chapter not found.");
       return null;
@@ -21,7 +21,7 @@ export async function processChapter(zip:JSZip, path: string): Promise<string | 
     await clearCacheFolder(CACHE_DIR);
 
     // Extract resources and update paths in HTML
-    const resources = await extractResourceBase64(zip, chapter);
+    const resources = await extractResourceBase64(zipPath, chapter);
 
     // Rewrite images in HTML
     let processedHtml = await extractAndRewriteImages(chapter, resources);

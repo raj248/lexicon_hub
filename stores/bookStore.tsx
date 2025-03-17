@@ -18,7 +18,6 @@ export type Book = {
   category?: string[];
   description?: string;
   path?: string;  // Path for local files (if EPUB/PDF)
-  chapters?: Chapter[]; // Only for Web Novels (list of chapter file paths)
   volumes?: string; // Only for Light Novels (list of volume file paths)
   addedAt?: number;
   externalLink?: string; // Store external sources for the book
@@ -29,7 +28,6 @@ type BookStore = {
   getBook: (id: string) => Book | undefined;
   getBookIds: () => string[];
   getBooks: () => Record<string, Book>;
-  getChapters: (bookId: string) => Chapter[];
   addBook: (book: Book) => void;
   addBooks: (books: Book[]) => void;
   updateBook: (id: string, data: Partial<Book>) => void;
@@ -86,9 +84,7 @@ export const useBookStore = create<BookStore & { hydrated: boolean }>()(
           return { books: newBooks };
         }),
 
-      getChapters(bookId) {
-        return get().books[bookId]?.chapters || [];
-      },
+
 
       updateBook: (id, data) =>
         set((state) => ({

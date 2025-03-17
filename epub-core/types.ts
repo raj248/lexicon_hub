@@ -2,7 +2,7 @@ export type Metadata = {
   title: string;
   language: string;
   date: string;
-  creator: string;
+  author: string;
   identifier: string;
   contributor?: string;
   coverImage?: string;

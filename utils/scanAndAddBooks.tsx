@@ -1,14 +1,15 @@
-import { Chapter, useBookStore } from "~/stores/bookStore"; // Import Zustand store
-import * as EpubKit from '~/modules/epub-kit';
-import { RequestStoragePermission, ScanFiles } from "~/modules/FileUtil"
-import * as Crypto from 'expo-crypto';
 import Toast from 'react-native-toast-message';
+import { useBookStore } from "~/stores/bookStore";
+
+import * as Crypto from 'expo-crypto';
+import { RequestStoragePermission, saveCoverImage, ScanFiles } from "~/modules/FileUtil"
+
+import { EPUBHandler } from "~/epub-core";
+import { TocEntry } from "~/epub-core/types";
 
 export default async function scanAndAddBooks() {
   try {
     const hasPermission = await RequestStoragePermission();
-    console.log("Storage permission:", hasPermission);
-
     if (!hasPermission) {
       Toast.show({
         type: "error",
@@ -25,15 +26,16 @@ export default async function scanAndAddBooks() {
     const existingBooks = useBookStore.getState().books; // Fetch existing books
     const existingPaths = new Set(Object.values(existingBooks).map(book => book.path)); // Store paths for quick lookup
 
-    const batchSize = 2; // Process books in batches
+    const batchSize = 2;
     let batch = [];
-    console.log(books)
+    const epub = new EPUBHandler();
 
     for (const bookPath of books) {
-      if (existingPaths.has(bookPath)) continue; // Skip if book already exists
+      if (existingPaths.has(bookPath)) continue;
+      await epub.loadFile(bookPath, true);
 
-      const metadata = await EpubKit.extractMetadata(bookPath).catch((err) => console.log(err));
-      console.log(metadata)
+      const metadata = await epub.getMetadata();
+      console.log("Metadata: ", metadata)
       if (!metadata) {
         Toast.show({
           type: "error",
@@ -42,24 +44,14 @@ export default async function scanAndAddBooks() {
         });
         continue;
       }
-
       const id = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA1,
         metadata.title + metadata.author
       );
-      const parsedChapters: Chapter[] = JSON.parse(metadata.chapters); // Convert string to array
+      const toc: TocEntry[] = await epub.getToc();
 
-      const transformedChapters = parsedChapters.flatMap((chapter: Chapter) => {
-        if (!chapter.paths || typeof chapter.paths !== "string") {
-          console.warn(`Invalid paths for chapter: ${chapter.title}`, chapter);
-          return []; // Skip invalid entries
-        }
-
-        return chapter.paths.split(",").map((path: string, index: number) => ({
-          title: index === 0 ? chapter.title : `${chapter.title} (Part ${index + 1})`,
-          paths: path.trim(),
-        }));
-      });
+      const coverImageBase64 = await epub.getCoverImage() as string;
+      metadata.coverImage = await saveCoverImage(coverImageBase64, metadata.title);
 
 
       const newBook = {
@@ -67,7 +59,7 @@ export default async function scanAndAddBooks() {
         path: bookPath,
         addedAt: Date.now(),
         id,
-        chapters: transformedChapters, // Store transformed chapters
+        chapters: toc,
       };
       batch.push(newBook);
 

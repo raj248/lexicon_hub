@@ -1,6 +1,6 @@
 import * as FileSystem from "expo-file-system";
-import JSZip from "jszip";
 import cheerio from "react-native-cheerio";
+import { readFileFromZip } from "~/modules/FileUtil";
 
 const CACHE_DIR = `${FileSystem.cacheDirectory}epub_resources/`;
 
@@ -32,7 +32,7 @@ export async function extractAndRewriteImages(htmlContent: string, resources: Re
 }
 
 export async function extractResourceBase64(
-  zip: JSZip,
+  zipPath: string,
   content: string
 ): Promise<Record<string, string>> {
   const $ = cheerio.load(content);
@@ -47,9 +47,8 @@ export async function extractResourceBase64(
   // Read each file from the ZIP and encode it in Base64
   for (const path of resourcePaths) {
     const newPath = path.replace("..", "OEBPS")
-    const file = zip.file(newPath);
-    if (file) {
-      const base64Data = await file.async("base64");
+    const base64Data = await readFileFromZip(zipPath, newPath, "base64");
+    if (base64Data) {
       // path.replace("OEBPS", "..")
       resourceBase64Map[path] = base64Data;
     }

@@ -1,36 +1,30 @@
-import React, { useEffect, useState, useTransition, useRef } from "react";
-import { SafeAreaView, ScrollView, ActivityIndicator, StatusBar, View, InteractionManager } from "react-native";
+import React, { useEffect, useState, useRef } from "react";
+import { SafeAreaView, ActivityIndicator, StatusBar } from "react-native";
 import { useNavigation, useLocalSearchParams } from "expo-router";
-import processChapter from "~/utils/processChapter";
+
 import FloatingHeader from "~/components/FloatingHeader";
 import { TapGestureHandler, State } from "react-native-gesture-handler";
 import ChapterListModal from "~/components/ChapterListModal";
 import { Chapter, useBookStore } from "~/stores/bookStore";
-import * as EpubKit from "~/modules/epub-kit";
 import { usePreferencesStore } from "~/stores/preferenceStore";
 import { WebView } from 'react-native-webview';
+import { EPUBHandler } from "~/epub-core";
 
 export default function ReaderScreen() {
   const [chapterContent, setChapterContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const navigation = useNavigation();
-
   const bookId = useLocalSearchParams().bookId as string;
   const [chapters, setChapters] = useState<Chapter[]>();
   const [index, setIndex] = useState<number>(12);
+  const latestIndex = useRef(index);
 
-  const [loading, setLoading] = useState(false); // Track loading state
-  const [isPending, startTransition] = useTransition();
-  const latestIndex = useRef(index); // Track latest index to prevent race conditions
+  const [headerVisibility, setHeaderVisibility] = useState(true);
+  const [chapterListVisibility, setChapterListVisibility] = useState(false);
+  const preferences = usePreferencesStore((state) => state.preferences);
 
-  const [headerVisibility, setHeaderVisibility] = useState(true)
-  const [chapterListVisibility, setChapterListVisibility] = useState(false)
-  const preferences = usePreferencesStore((state) => state.preferences)
-
-  const toggleHeader = () => {
-    setHeaderVisibility(!headerVisibility);
-  };
-
+  const toggleHeader = () => setHeaderVisibility(!headerVisibility);
   const toggleChapterList = () => {
     setChapterListVisibility(!chapterListVisibility);
     toggleHeader();
@@ -39,10 +33,14 @@ export default function ReaderScreen() {
   const book = useBookStore.getState().getBook(bookId);
   if (!chapters) setChapters(book?.chapters);
 
+  const epubHandler = useRef<EPUBHandler | null>(null);
+
   useEffect(() => {
     StatusBar.setHidden(true, "fade");
     setHeaderVisibility(false);
     navigation.setOptions({ headerShown: false });
+
+    epubHandler.current = new EPUBHandler(book?.path || "");
     return () => {
       StatusBar.setHidden(false, "fade");
       setHeaderVisibility(true);
@@ -51,37 +49,28 @@ export default function ReaderScreen() {
 
   useEffect(() => {
     setChapterContent('');
-    setLoading(true); // Start loading state
+    setLoading(true);
 
     async function loadContent() {
-      latestIndex.current = index; // Update latest index ref
+      latestIndex.current = index;
       setLoading(true);
 
-      // Defer heavy processing until UI is rendered
-      // await InteractionManager.runAfterInteractions();
-      const startTime = performance.now();
+      if (!epubHandler.current) return;
+      const chapterPath = chapters ? chapters[index].paths : "";
+      const rawContent = await epubHandler.current.getChapter(chapterPath);
+      if (latestIndex.current !== index) return;
 
-      const chapterContent = await EpubKit.getChapter(book?.path || "", chapters ? chapters[index].paths : "");
-      console.log(chapterContent)
-      const endTime = performance.now();
-      if (latestIndex.current !== index) return; // Ignore outdated calls
-      const title = chapters ? chapters[index].title : "";
-      if (!chapterContent) {
+      if (!rawContent) {
         setChapterContent('');
         setLoading(false);
         return;
       }
 
-      const content = await processChapter(chapterContent, preferences.fontSize);
-      console.log(endTime - startTime)
-      setChapterContent(content);
+      const processedContent = await epubHandler.current.processChapter(rawContent, preferences.fontSize);
+      setChapterContent(processedContent);
       setLoading(false);
     }
-
-    startTransition(() => {
-      loadContent();
-    });
-    // Defer UI updates while loading content
+    loadContent();
   }, [index, preferences]);
 
   const handleTap = (event: { nativeEvent: { state: number } }) => {
@@ -89,29 +78,21 @@ export default function ReaderScreen() {
       toggleHeader();
     }
   };
-  const tapStartTime = useRef(0);
-  return (
 
+  return (
     <TapGestureHandler
       onHandlerStateChange={handleTap}
       numberOfTaps={1}
-      maxDurationMs={150} // Reduce tap detection delay
+      maxDurationMs={150}
       shouldCancelWhenOutside={false}
-      onBegan={() => {
-        tapStartTime.current = performance.now(); // Capture tap start time
-      }}
-      onActivated={() => {
-        const tapDuration = performance.now() - tapStartTime.current;
-        console.log(`Tap registered in ${tapDuration.toFixed(2)} ms`);
-      }}
     >
       <SafeAreaView className="flex-1 mt-4">
-        {loading || isPending ? (
+        {loading ? (
           <ActivityIndicator size="large" className="flex-1 justify-center" />
         ) : (
           <WebView
             originWhitelist={['*']}
-            source={{ html: chapterContent || '' }} // Ensure it's never null
+            source={{ html: chapterContent || '' }}
             injectedJavaScript={`document.documentElement.style.userSelect = 'none';`}
             style={{ flex: 1 }}
           />
