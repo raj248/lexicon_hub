@@ -2,11 +2,6 @@ import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-export type Chapter = {
-  title: string;
-  paths: string;
-};
-
 export type Category = "Light Novel" | "Web Novel" | "Manga" | "Comic" | "Book";
 
 export type Book = {

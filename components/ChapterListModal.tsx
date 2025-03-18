@@ -6,20 +6,20 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
-import { Chapter } from "~/stores/bookStore";
 import { Text } from "~/components/nativewindui/Text";
+import { TocEntry } from "~/epub-core/types";
 
 interface ChapterDrawerProps {
   toggleChapterList: () => void;
   chapterListVisibility: boolean;
-  currentChapters: Chapter[] | undefined;
+  toc: TocEntry[] | undefined;
   callBack: (item: number) => void;
 }
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
 
-export default function ChapterDrawer({ currentChapters, callBack, toggleChapterList, chapterListVisibility }: ChapterDrawerProps) {
+export default function ChapterDrawer({ toc, callBack, toggleChapterList, chapterListVisibility }: ChapterDrawerProps) {
 
   const translateX = useSharedValue(screenWidth);
   const overlayOpacity = useSharedValue(0);
@@ -56,7 +56,7 @@ export default function ChapterDrawer({ currentChapters, callBack, toggleChapter
     callBack(index);
   }, [callBack]);
 
-  const renderItem = useCallback(({ item, index }: { item: Chapter; index: number }) => (
+  const renderItem = useCallback(({ item, index }: { item: TocEntry; index: number }) => (
     <Pressable
       onPress={() => handleChapterSelection(index)}
       className="py-3 px-4 border-b border-gray-300"
@@ -118,7 +118,8 @@ export default function ChapterDrawer({ currentChapters, callBack, toggleChapter
       >
         <FlatList
           ref={flatListRef}
-          data={currentChapters}
+          data={toc}
+          keyExtractor={(item, index) => index.toString()}
           showsVerticalScrollIndicator={false}
           renderItem={renderItem}
           contentContainerStyle={{ paddingVertical: 10 }}

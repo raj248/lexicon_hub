@@ -1,37 +1,34 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { SafeAreaView, ActivityIndicator, StatusBar } from "react-native";
 import { useNavigation, useLocalSearchParams } from "expo-router";
+import { TapGestureHandler, State } from "react-native-gesture-handler";
+import { WebView } from 'react-native-webview';
 
 import FloatingHeader from "~/components/FloatingHeader";
-import { TapGestureHandler, State } from "react-native-gesture-handler";
 import ChapterListModal from "~/components/ChapterListModal";
-import { Chapter, useBookStore } from "~/stores/bookStore";
-import { usePreferencesStore } from "~/stores/preferenceStore";
-import { WebView } from 'react-native-webview';
+
 import { EPUBHandler } from "~/epub-core";
 
 export default function ReaderScreen() {
-  const [chapterContent, setChapterContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [content, setContent] = useState('');
+  const [index, setIndex] = useState<number>(12);
+  const latestIndex = useRef(index);
+  const setChapterIndex = useCallback((i: number) => {
+    const entry = epubHandler.current?.getSpineIndexFromTocIndex(i)
+    if (entry) setIndex(entry);
+  }, [])
 
   const navigation = useNavigation();
   const bookId = useLocalSearchParams().bookId as string;
-  const [chapters, setChapters] = useState<Chapter[]>();
-  const [index, setIndex] = useState<number>(12);
-  const latestIndex = useRef(index);
+
 
   const [headerVisibility, setHeaderVisibility] = useState(true);
   const [chapterListVisibility, setChapterListVisibility] = useState(false);
-  const preferences = usePreferencesStore((state) => state.preferences);
 
   const toggleHeader = () => setHeaderVisibility(!headerVisibility);
-  const toggleChapterList = () => {
-    setChapterListVisibility(!chapterListVisibility);
-    toggleHeader();
-  };
+  const toggleChapterList = () => { setChapterListVisibility(!chapterListVisibility); toggleHeader(); };
 
-  const book = useBookStore.getState().getBook(bookId);
-  if (!chapters) setChapters(book?.chapters);
 
   const epubHandler = useRef<EPUBHandler | null>(null);
 
@@ -40,7 +37,11 @@ export default function ReaderScreen() {
     setHeaderVisibility(false);
     navigation.setOptions({ headerShown: false });
 
-    epubHandler.current = new EPUBHandler(book?.path || "");
+    epubHandler.current = new EPUBHandler();
+
+    epubHandler.current.loadFile(bookId).then(() => {
+      setIndex(0);
+    });
     return () => {
       StatusBar.setHidden(false, "fade");
       setHeaderVisibility(true);
@@ -48,30 +49,23 @@ export default function ReaderScreen() {
   }, []);
 
   useEffect(() => {
-    setChapterContent('');
     setLoading(true);
 
     async function loadContent() {
+      if (latestIndex.current == index) return;
       latestIndex.current = index;
-      setLoading(true);
 
       if (!epubHandler.current) return;
-      const chapterPath = chapters ? chapters[index].paths : "";
-      const rawContent = await epubHandler.current.getChapter(chapterPath);
-      if (latestIndex.current !== index) return;
+      await epubHandler.current.getChapter(index)
+        .then((res) => {
+          if (res) setContent(res)
+          setLoading(false);
+          return;
+        }).catch(() => setLoading(false))
 
-      if (!rawContent) {
-        setChapterContent('');
-        setLoading(false);
-        return;
-      }
-
-      const processedContent = await epubHandler.current.processChapter(rawContent, preferences.fontSize);
-      setChapterContent(processedContent);
-      setLoading(false);
     }
     loadContent();
-  }, [index, preferences]);
+  }, [index]);
 
   const handleTap = (event: { nativeEvent: { state: number } }) => {
     if (event.nativeEvent.state === State.ACTIVE) {
@@ -92,7 +86,7 @@ export default function ReaderScreen() {
         ) : (
           <WebView
             originWhitelist={['*']}
-            source={{ html: chapterContent || '' }}
+            source={{ html: content }}
             injectedJavaScript={`document.documentElement.style.userSelect = 'none';`}
             style={{ flex: 1 }}
           />
@@ -103,7 +97,7 @@ export default function ReaderScreen() {
         />
 
         <ChapterListModal
-          toggleChapterList={toggleChapterList} chapterListVisibility={chapterListVisibility} currentChapters={chapters} callBack={setIndex}
+          toggleChapterList={toggleChapterList} chapterListVisibility={chapterListVisibility} toc={epubHandler.current?.getToc()} callBack={setChapterIndex}
         />
       </SafeAreaView>
     </TapGestureHandler>

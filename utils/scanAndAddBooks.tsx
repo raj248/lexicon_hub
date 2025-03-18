@@ -35,7 +35,6 @@ export default async function scanAndAddBooks() {
       await epub.loadFile(bookPath, true);
 
       const metadata = await epub.getMetadata();
-      console.log("Metadata: ", metadata)
       if (!metadata) {
         Toast.show({
           type: "error",

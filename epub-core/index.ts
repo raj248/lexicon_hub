@@ -59,8 +59,6 @@ export class EPUBHandler {
     await this.parseEPUB();
     return
   }
-  
-
   async parseEPUB() {
     if (!this.zipPath) throw new Error("No file path provided");
     this.opfPath = await findOpfPath(this.zipPath);
@@ -82,15 +80,12 @@ export class EPUBHandler {
     this.metadata = opf.metadata;
     this.spine = opf.spine;
     this.toc = toc;
-    console.log(this.metadata)
     return { metadata: opf.metadata, spine: opf.spine, toc: toc };
   }
-
   async extractChapter(chapterPath: string) {
     const path = this.basePath + chapterPath;
     return processChapter(this.zipPath, path);
   }
-
   async getCoverImage() {
     const pathsToTry: string[] = [
       this.metadata.coverImage || "", // Ensure it's a string
@@ -111,31 +106,61 @@ export class EPUBHandler {
       }
     }
   
-    console.error("Cover image not found");
+    console.info("Cover image not found");
     return "";
   }
-  
-  async getMetadata() {
+  getMetadata() {
     return this.metadata;
   }
-  async getSpine() {
+  getSpine() {
     return this.spine;
   }
-  async getToc() {
+  getToc() {
     return this.toc;
   }
-  async getTocEntry(index: number) {
+  getTocEntry(index: number) {
     if (index < 0 || index >= this.toc.length) {
       throw new Error("Invalid chapter index");
     }
     return this.toc[index];
   }
-  async getChapter(index: number) {
-    if (index < 0 || index >= this.spine.length) {
-      throw new Error("Invalid chapter index");
+  getSpineIndexFromTocIndex(tocIndex: number): number {
+    if (tocIndex < 0 || tocIndex >= this.toc.length) {
+      throw new Error("Invalid TOC index");
     }
-    const chapter = this.spine[index];
-    if (!chapter.href) throw new Error("Chapter path not found in spine");
-    return this.extractChapter(chapter.href);
-  }    
+
+    const tocEntry = this.toc[tocIndex];
+    const spineIndex = this.spine.findIndex((s) => s.id === tocEntry.id || s.href === tocEntry.href);
+  
+    if (spineIndex === -1) {
+      throw new Error("Entry not found in spine");
+    }
+  
+    return spineIndex;
+  }
+  
+  async getChapter(index: number) : Promise<string>
+  async getChapter(id: string) : Promise<string>
+  async getChapter(arg: number | string): Promise<string> {
+    let chapter: any;
+  
+    if (typeof arg === "number") {
+      if (arg < 0 || arg >= this.spine.length) {
+        throw new Error("Invalid chapter index");
+      }
+      chapter = this.spine[arg];
+      if (!chapter.href) throw new Error("Chapter path not found in spine");
+    } else {
+      chapter = this.toc.find((entry) => entry.id === arg);
+      if (!chapter) throw new Error("Chapter not found in TOC");
+    }
+  
+    try {
+      const content = await this.extractChapter(chapter.href);
+      return content ?? "";
+    } catch {
+      return "";
+    }
+  }
+     
 }

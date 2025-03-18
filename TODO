@@ -1,6 +1,6 @@
 NEXT:
 
-modify reader.tsx to use epub-core
+add next/prev Chapter button
 
 Integrate Flipper in This App
 
@@ -10,3 +10,5 @@ Downscale large images before rendering.
 
 Use SQLite for Metadata & Caching
 Store bookmarks, highlights, and progress in a local database.
+
+Port FloatingHeader and ChapterList to render in webView (pure js and css)

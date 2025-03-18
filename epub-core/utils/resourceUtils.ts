@@ -16,12 +16,7 @@ export async function extractAndRewriteImages(htmlContent: string, resources: Re
         const mimeType = extension === "png" ? "image/png" :
                          extension === "jpg" || extension === "jpeg" ? "image/jpeg" :
                          "application/octet-stream";
-
-        // Write the resource to the cache folder
-        const filePath = `${CACHE_DIR}${Date.now()}.${extension}`;
-        await FileSystem.writeAsStringAsync(filePath, resourceData, { encoding: FileSystem.EncodingType.Base64 });
-
-        return match.replace(src, filePath);
+        return match.replace(src, `data:image/${extension};base64,${resourceData}`);
       }
 
       return match;
@@ -46,7 +41,8 @@ export async function extractResourceBase64(
 
   // Read each file from the ZIP and encode it in Base64
   for (const path of resourcePaths) {
-    const newPath = path.replace("..", "OEBPS")
+    const newPath:string = path.replace("..", "OEBPS")
+    console.log("path: ", path, "newPath: ", newPath)
     const base64Data = await readFileFromZip(zipPath, newPath, "base64");
     if (base64Data) {
       // path.replace("OEBPS", "..")
