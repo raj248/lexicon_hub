@@ -1,7 +1,13 @@
-NEXT:
+NEXT: implement feat: save and load lastRead progress
 
 add next/prev Chapter button
 
+implement feat: backup
+implement feat: settings
+implement feat: preferences
+implement feat: watching for webnovel updates (web scraping/ crawling)
+
+optimize toggleHeader animation
 Integrate Flipper in This App
 
 Using MMKV with zustand persist-middleware

@@ -1,7 +1,8 @@
-import { StyleSheet, View } from 'react-native';
+import { InteractionManager, StyleSheet, View } from 'react-native';
 import { Text } from './nativewindui/Text';
 import { Button } from './nativewindui/Button';
-import * as FileSystem from "expo-file-system"
+// import { Button } from '~/components/Button';
+
 import { EPUBHandler } from "epub-core"
 import { ScanFiles, readFileFromZip } from '~/modules/FileUtil';
 import { useEffect } from 'react';
@@ -14,6 +15,7 @@ const coverImage = "OEBPS/Images/Cover.jpg"
 
 export default function Debug() {
   const epub = new EPUBHandler()
+  const { debugClear } = useBookStore.getState()
   useEffect(() => {
     // console.log(useBookStore.getState().books)
     const startAsync = async () => {
@@ -79,9 +81,22 @@ export default function Debug() {
         .then((res) => { console.log(res) });
     })()
   }
-
+  function clear() {
+    console.log("clearing")
+    InteractionManager.runAfterInteractions(() => {
+      // Object.keys(books).map((id) => useBookStore.getState().removeBook(id))
+      // Object.keys(watchers).map((id) => useWatcherStore.getState().removeWatcher(id))
+      debugClear();
+      console.log("cleared")
+    });
+  }
   return (
     <View className='flex-1 justify-center items-center'>
+      <Button onPress={clear} >
+        <Text>
+          Clear Debug
+        </Text>
+      </Button>
       <Button variant='secondary' className={className_button} onPress={onPressDebug}>
         <Text>Debug Images</Text>
       </Button>

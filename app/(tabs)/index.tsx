@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Pressable, InteractionManager } from 'react-native';
 import { Text } from '~/components/nativewindui/Text';
-import { FlatGrid } from 'react-native-super-grid'; // ✅ Auto Grid Layout
+import { FlatGrid } from 'react-native-super-grid';
 import { useRuntimeStore } from '~/stores/useRuntimeStore';
 import { Image } from 'expo-image';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { useRouter } from 'expo-router';
-import Animated, { BounceIn, BounceInUp, BounceOut, Easing, FadeInUp, LinearTransition, SlideInRight } from "react-native-reanimated";
-import { Button } from '~/components/Button';
+import Animated, { BounceOut, Easing, FadeInUp, LinearTransition } from "react-native-reanimated";
 import { RefreshControl, ScrollView } from 'react-native-gesture-handler';
 import scanAndAddBooks from '~/utils/scanAndAddBooks';
 import { useBookStore } from '~/stores/bookStore';
@@ -43,35 +42,20 @@ const dummyWatchers = {
   },
 };
 
-
 export default function LibraryTab() {
-
-  const { books, debugClear } = useBookStore();
-  const { searchQuery } = useRuntimeStore();
+  const { books } = useBookStore.getState();
+  const { searchQuery } = useRuntimeStore.getState();
   const { colors } = useColorScheme();
   const router = useRouter();
 
-
-  const clear = () => {
-    console.log("clearing")
-    InteractionManager.runAfterInteractions(() => {
-      // Object.keys(books).map((id) => useBookStore.getState().removeBook(id))
-      // Object.keys(watchers).map((id) => useWatcherStore.getState().removeWatcher(id))
-      debugClear();
-      console.log("cleared")
-    });
-  }
-
-
   const filteredBookIds = useMemo(() => {
-    if (!searchQuery) return Object.keys(books); // Return all book IDs if no search query
+    if (!searchQuery) return Object.keys(books);
     const lowerQuery = searchQuery.toLowerCase();
 
     return Object.keys(books).filter((id) =>
       books[id].title.toLowerCase().includes(lowerQuery)
     );
   }, [searchQuery, books]);
-
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = async () => {
@@ -84,9 +68,7 @@ export default function LibraryTab() {
   };
 
   const CoverImage = ({ uri }: { uri?: string }) => {
-
     const randomBlurhash = (uri) ? null : useMemo(getRandomBlurhash, []); // Ensure a consistent blurhash for each render
-
     return (
       <Image
         source={{ uri: uri ? uri : null }}
@@ -99,13 +81,13 @@ export default function LibraryTab() {
   };
   return (
     <ScrollView
-      className="flex-1"
+      className="flex-1 mb-9"
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
       <View className="p-4 mb-4">
-        <Button title="ClearDebug" onPress={clear} />
+
         <FlatGrid
           scrollEnabled={false}
           data={filteredBookIds.map((id) => books[id])}
