@@ -60,115 +60,68 @@ export default function FloatingHeader({
   }));
 
   return (
-    <Modal transparent visible={headerVisibility}>
-      <TouchableWithoutFeedback onPress={() => setHeaderVisibility(false)}>
-        <View style={{ flex: 1 }}>
-          {/* Floating Header (Right Side) */}
-          <Animated.View
-            pointerEvents="auto"
-            style={[
-              {
-                position: "absolute",
-                right: 20,
-                top: "30%",
-                backgroundColor: "grey",
-                borderRadius: 16,
-                paddingVertical: 10,
-                alignItems: "center",
-                elevation: 4,
-                flexDirection: "row",
-                justifyContent: "space-between",
-                overflow: "hidden",
-              },
-              animatedStyles,
-            ]}
-          >
-            <View className="flex-col items-center justify-center">
-              <Appbar.Action icon="arrow-left" onPress={() => router.back()} color={colors.background} />
-              <Appbar.Action icon="bookmark" onPress={() => { }} color={colors.background} />
-              <Appbar.Action icon="cog" onPress={() => setSettingsExpanded(!settingsExpanded)} color={colors.background} />
-              <Appbar.Action icon="file-document-outline" onPress={toggleChapterList} color={colors.background} />
-            </View>
+    // <Modal transparent visible={headerVisibility}>
+    // <TouchableWithoutFeedback onPress={() => setHeaderVisibility(false)}>
+    <Animated.View
+      pointerEvents="auto"
+      style={[
+        {
+          position: "absolute",
+          right: 20,
+          top: "30%", // Correct absolute positioning
+          backgroundColor: "grey",
+          borderRadius: 16,
+          paddingVertical: 10,
+          alignItems: "flex-start",
+          elevation: 4,
+          flexDirection: "row", // Ensure items are stacked vertically
+          // justifyContent: "space-between",
+          width: 60, // Set a defined width
+        },
+        animatedStyles,
+      ]}
+    >
+      <View className="flex-col items-center justify-center">
+        <Appbar.Action icon="arrow-left" onPress={() => router.back()} color={colors.background} />
+        <Appbar.Action icon="bookmark" onPress={() => { }} color={colors.background} />
+        <Appbar.Action icon="cog" onPress={() => setSettingsExpanded(!settingsExpanded)} color={colors.background} />
+        <Appbar.Action icon="file-document-outline" onPress={toggleChapterList} color={colors.background} />
+      </View>
 
-            {/* Expanded Settings View */}
-            <Animated.View
-              style={[
-                {
-                  flex: 1,
-                  height: "auto",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "transparent",
-                  borderRadius: 10,
-                  padding: 10,
-                  marginRight: 10,
-                },
-                newViewStyles,
-              ]}
-            >
-              <View className="flex-row justify-between items-center">
-                <Text className="text-white">Change Theme</Text>
-                <Appbar.Action
-                  icon={isDarkColorScheme ? "weather-sunny" : "weather-night"}
-                  onPress={handleToggle}
-                  color={colors.background}
-                  disabled={switching}
-                  style={{ margin: "auto", padding: "auto" }}
-                />
-              </View>
-              <View className="flex-row justify-between items-center">
-                <Text className="text-white">Font</Text>
-                <Appbar.Action
-                  icon="chevron-left"
-                  onPress={() => { setFontSize(preferences.fontSize - 1); }}
-                  color={colors.background}
-                />
-                <Text className="text-white">{preferences.fontSize}</Text>
-                <Appbar.Action
-                  icon="chevron-right"
-                  onPress={() => { setFontSize(preferences.fontSize + 1); }}
-                  color={colors.background}
-                />
-              </View>
-            </Animated.View>
-          </Animated.View>
-
-          {/* Next/Previous Chapter Buttons (Bottom of WebView) */}
-          <View
-            style={{
-              position: "absolute",
-              bottom: 20,
-              left: 20,
-              right: 20,
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
+      {/* Expanded Settings View */}
+      {settingsExpanded && (
+        <Animated.View
+          style={[
+            {
+              flex: 1,
+              backgroundColor: "grey",
+              borderRadius: 10,
+              padding: 10,
+              width: 150, // Give it a defined width
+            },
+            newViewStyles,
+          ]}
+        >
+          <View className="flex-row justify-between items-center p-4">
+            <Text className="text-white">Change Theme</Text>
             <Appbar.Action
-              icon="arrow-left-bold"
-              onPress={goToPrevChapter}
+              icon={isDarkColorScheme ? "weather-sunny" : "weather-night"}
+              onPress={handleToggle}
               color={colors.background}
-              style={{
-                backgroundColor: "grey",
-                borderRadius: 50,
-                padding: 10,
-                elevation: 4,
-              }}
-            />
-            <Appbar.Action
-              icon="arrow-right-bold"
-              onPress={goToNextChapter}
-              color={colors.background}
-              style={{
-                backgroundColor: "grey",
-                borderRadius: 50,
-                padding: 10,
-                elevation: 4,
-              }}
+              disabled={switching}
             />
           </View>
-        </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+          <View className="flex-row justify-between items-center px-4">
+            <Text className="text-white">Font</Text>
+            <Appbar.Action icon="chevron-left" onPress={() => setFontSize(preferences.fontSize - 1)} color={colors.background} />
+            <Text className="text-white">{preferences.fontSize}</Text>
+            <Appbar.Action icon="chevron-right" onPress={() => setFontSize(preferences.fontSize + 1)} color={colors.background} />
+          </View>
+        </Animated.View>
+      )}
+    </Animated.View>
+
+    // </TouchableWithoutFeedback>
+    // </Modal>
   );
 }

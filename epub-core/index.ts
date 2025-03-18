@@ -47,11 +47,11 @@ export class EPUBHandler {
       const bookData = await getBook(arg); // Fetch book from store
       
       
+      console.log(`Book ID: ${arg}`);
       if (!bookData || !bookData.path) {
         throw new Error(`Book with ID ${arg} not found.`);
       }
       arg = bookData.path;
-      console.log(`Book path: ${arg}`);
     }
 
     console.log(`File URI: ${arg}`);
