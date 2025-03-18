@@ -11,7 +11,13 @@ import { router } from "expo-router";
 import { Text } from "./nativewindui/Text";
 import { usePreferencesStore } from "~/stores/preferenceStore";
 
-export default function FloatingHeader({ headerVisibility, toggleChapterList, setHeaderVisibility }: any) {
+export default function FloatingHeader({
+  headerVisibility,
+  toggleChapterList,
+  setHeaderVisibility,
+  goToPrevChapter,
+  goToNextChapter,
+}: any) {
   const [settingsExpanded, setSettingsExpanded] = useState(false);
 
   const translateX = useSharedValue(headerVisibility ? 0 : 100);
@@ -20,8 +26,6 @@ export default function FloatingHeader({ headerVisibility, toggleChapterList, se
   const newViewTranslateX = useSharedValue(50);
 
   const { preferences, setFontSize } = usePreferencesStore();
-
-
   const { colors, isDarkColorScheme, toggleColorScheme } = useColorScheme();
   const [switching, setSwitching] = useState(false);
 
@@ -33,6 +37,7 @@ export default function FloatingHeader({ headerVisibility, toggleChapterList, se
       setTimeout(() => setSwitching(false), 200); // Allow UI to update
     });
   };
+
   useEffect(() => {
     width.value = withTiming(settingsExpanded ? 300 : 60, { duration: 400 });
     newViewOpacity.value = withTiming(settingsExpanded ? 1 : 0, { duration: 300 });
@@ -58,6 +63,7 @@ export default function FloatingHeader({ headerVisibility, toggleChapterList, se
     <Modal transparent visible={headerVisibility}>
       <TouchableWithoutFeedback onPress={() => setHeaderVisibility(false)}>
         <View style={{ flex: 1 }}>
+          {/* Floating Header (Right Side) */}
           <Animated.View
             pointerEvents="auto"
             style={[
@@ -77,18 +83,15 @@ export default function FloatingHeader({ headerVisibility, toggleChapterList, se
               animatedStyles,
             ]}
           >
-            <View
-              className="flex-col items-center justify-center"
-            >
+            <View className="flex-col items-center justify-center">
               <Appbar.Action icon="arrow-left" onPress={() => router.back()} color={colors.background} />
               <Appbar.Action icon="bookmark" onPress={() => { }} color={colors.background} />
               <Appbar.Action icon="cog" onPress={() => setSettingsExpanded(!settingsExpanded)} color={colors.background} />
               <Appbar.Action icon="file-document-outline" onPress={toggleChapterList} color={colors.background} />
             </View>
 
-            {/* New View (Visible After Expansion) */}
+            {/* Expanded Settings View */}
             <Animated.View
-              // pointerEvents={settingsExpanded ? "none" : "auto"}
               style={[
                 {
                   flex: 1,
@@ -114,23 +117,56 @@ export default function FloatingHeader({ headerVisibility, toggleChapterList, se
                 />
               </View>
               <View className="flex-row justify-between items-center">
-                <Text className="text-white">Font </Text>
+                <Text className="text-white">Font</Text>
                 <Appbar.Action
                   icon="chevron-left"
-                  onPress={() => { setFontSize(preferences.fontSize - 1) }}
+                  onPress={() => { setFontSize(preferences.fontSize - 1); }}
                   color={colors.background}
                 />
                 <Text className="text-white">{preferences.fontSize}</Text>
                 <Appbar.Action
                   icon="chevron-right"
-                  onPress={() => { setFontSize(preferences.fontSize + 1) }}
+                  onPress={() => { setFontSize(preferences.fontSize + 1); }}
                   color={colors.background}
                 />
               </View>
             </Animated.View>
-
-
           </Animated.View>
+
+          {/* Next/Previous Chapter Buttons (Bottom of WebView) */}
+          <View
+            style={{
+              position: "absolute",
+              bottom: 20,
+              left: 20,
+              right: 20,
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <Appbar.Action
+              icon="arrow-left-bold"
+              onPress={goToPrevChapter}
+              color={colors.background}
+              style={{
+                backgroundColor: "grey",
+                borderRadius: 50,
+                padding: 10,
+                elevation: 4,
+              }}
+            />
+            <Appbar.Action
+              icon="arrow-right-bold"
+              onPress={goToNextChapter}
+              color={colors.background}
+              style={{
+                backgroundColor: "grey",
+                borderRadius: 50,
+                padding: 10,
+                elevation: 4,
+              }}
+            />
+          </View>
         </View>
       </TouchableWithoutFeedback>
     </Modal>
