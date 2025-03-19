@@ -4,58 +4,33 @@ import { persist, createJSONStorage } from "zustand/middleware";
 
 export type ProgressData = {
   id: string;
-  readProgress: number; // Percentage or exact page
+  readProgress: number;
+  chapter: number;
   lastReadAt: number;
-  chapter?: number;   // For non-Light Novels
-  volume?: number;    // For Light Novels
-  readingStatus?: "not started" | "reading" | "completed" | "dropped" | string;
+  volume?: number;
+  status: "not started" | "reading" | "completed" | "dropped";
 };
 
 type ProgressStore = {
-  progress: Record<string, ProgressData>;
-  addProgress: (id: string, initialData?: Partial<ProgressData>) => void;
-  updateProgress: (id: string, data: Partial<ProgressData>) => void;
-  setReadingStatus: (id: string, status: ProgressData["readingStatus"]) => void;
+  progress: Record<string, ProgressData>; // Store progress by book ID
+  setProgress: (id: string, data: Partial<ProgressData>) => void;
+  getProgress: (id: string) => ProgressData | undefined;
 };
 
 export const useProgressStore = create<ProgressStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       progress: {},
 
-      addProgress: (id, initialData = {}) =>
-        set((state) => {
-          if (state.progress[id]) return state;
-
-          return {
-            progress: {
-              ...state.progress,
-              [id]: {
-                id,
-                readProgress: 0,
-                lastReadAt: Date.now(),
-                readingStatus: "not started",
-                ...initialData,
-              },
-            },
-          };
-        }),
-
-      updateProgress: (id, data) =>
+      setProgress: (id, data) =>
         set((state) => ({
           progress: {
             ...state.progress,
-            [id]: { ...state.progress[id], ...data },
+            [id]: { ...state.progress[id], ...data, lastReadAt: Date.now() },
           },
         })),
 
-      setReadingStatus: (id, status) =>
-        set((state) => ({
-          progress: {
-            ...state.progress,
-            [id]: { ...state.progress[id], readingStatus: status, lastReadAt: Date.now() },
-          },
-        })),
+      getProgress: (id) => get().progress[id],
     }),
     {
       name: "progress-store",

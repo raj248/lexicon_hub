@@ -1,77 +1,106 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { SafeAreaView, ActivityIndicator, StatusBar, View } from "react-native";
+import { ActivityIndicator, StatusBar, View } from "react-native";
 import { useNavigation, useLocalSearchParams } from "expo-router";
-import { TapGestureHandler, State } from "react-native-gesture-handler";
-import { WebView } from 'react-native-webview';
+import { WebView } from "react-native-webview";
 
 import FloatingHeader from "~/components/FloatingHeader";
 import ChapterListModal from "~/components/ChapterListModal";
 
 import { EPUBHandler } from "~/epub-core";
 import { injectedJS } from "~/utils/jsInjection";
+import { useProgressStore } from "~/stores/progressStore";
 
 export default function ReaderScreen() {
-  const [loading, setLoading] = useState(false);
-  const [content, setContent] = useState('');
-  const [index, setIndex] = useState<number>(12);
-  const latestIndex = useRef(index);
-  const setChapterIndex = useCallback((i: number) => {
-    const entry = epubHandler.current?.getSpineIndexFromTocIndex(i)
-    if (entry) setIndex(entry);
-  }, [])
-
   const navigation = useNavigation();
-  const bookId = useLocalSearchParams().bookId as string;
+  const { bookId } = useLocalSearchParams() as { bookId: string };
 
+  const webViewRef = useRef<WebView>(null);
+  const epubHandler = useRef<EPUBHandler | null>(null);
+  const latestIndex = useRef<number>(12);
 
-  const [headerVisibility, setHeaderVisibility] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [content, setContent] = useState("");
+  const [index, setIndex] = useState<number>(12);
+  const [headerVisibility, setHeaderVisibility] = useState(false);
   const [chapterListVisibility, setChapterListVisibility] = useState(false);
 
+  let initialScroll = useRef(0);
+  const hasInitialized = useRef(false);
+
+
+
+  /** Toggle Header & Chapter List */
   const toggleHeader = () => {
-    setHeaderVisibility(!headerVisibility);
+    setHeaderVisibility((prev) => !prev);
     setChapterListVisibility(false);
-  }
-  const toggleChapterList = () => { setChapterListVisibility(!chapterListVisibility); setHeaderVisibility(!headerVisibility); };
+  };
+  const toggleChapterList = () => {
+    setChapterListVisibility((prev) => !prev);
+    setHeaderVisibility((prev) => !prev);
+  };
 
+  /** Set Chapter Index from TOC */
+  const setChapterIndex = useCallback((i: number) => {
+    const entry = epubHandler.current?.getSpineIndexFromTocIndex(i);
+    if (entry !== undefined) setIndex(entry);
+  }, []);
 
-  const epubHandler = useRef<EPUBHandler | null>(null);
-  // init
+  /** Initialize EPUB */
   useEffect(() => {
     StatusBar.setHidden(true, "fade");
-    setHeaderVisibility(false);
     navigation.setOptions({ headerShown: false });
 
     epubHandler.current = new EPUBHandler();
     epubHandler.current.loadFile(bookId).then(() => {
-      setIndex(10);
+      const progress = useProgressStore.getState().getProgress(bookId);
+      if (progress) {
+        setIndex(progress.chapter);
+        initialScroll.current = progress?.readProgress || 0;
+        console.log(JSON.stringify(progress))
+      } else {
+        setIndex(0);
+      }
+      // hasInitialized.current = true;
     });
+
     return () => {
       StatusBar.setHidden(false, "fade");
-      setHeaderVisibility(true);
     };
   }, []);
-  // load chapter on list navigation
+
+  /** Load Chapter Content */
   useEffect(() => {
+    if (latestIndex.current === index || !epubHandler.current) return;
+
     setLoading(true);
-    async function loadContent() {
-      if (latestIndex.current == index) return;
-      latestIndex.current = index;
+    latestIndex.current = index;
 
-      if (!epubHandler.current) return;
-      await epubHandler.current.getChapter(index)
-        .then((res) => {
-          if (res) setContent(res)
-          setLoading(false);
-          return;
-        }).catch(() => setLoading(false))
+    epubHandler.current
+      .getChapter(index)
+      .then((res) => {
+        if (res) setContent(res);
+        const progress = useProgressStore.getState().getProgress(bookId);
+        if (progress) {
+          if (progress.chapter !== index) {
+            useProgressStore.getState().setProgress(bookId, { readProgress: 0, chapter: index });
+            initialScroll.current = 0;
+          }
+          // initialScroll.current = progress?.readProgress || 0;
+          console.log("scroll", progress?.readProgress, initialScroll.current)
+        }
 
-    }
-    loadContent();
+      })
+      .finally(() => setLoading(false));
   }, [index]);
 
+
   const onMessage = (event: any) => {
+    console.log(event.nativeEvent.data)
     if (event.nativeEvent.data === "toggleHeader") {
-      toggleHeader();;
+      toggleHeader();
+    } else {
+      const data = JSON.parse(event.nativeEvent.data);
+      useProgressStore.getState().setProgress(bookId, { readProgress: data.value, chapter: index });
     }
   };
 
@@ -81,9 +110,10 @@ export default function ReaderScreen() {
         <ActivityIndicator size="large" className="flex-1 justify-center" />
       ) : (
         <WebView
+          ref={webViewRef}
           originWhitelist={['*']}
           source={{ html: content }}
-          injectedJavaScript={injectedJS}
+          injectedJavaScript={injectedJS + `window.scrollTo(0, ${(initialScroll.current / 100)} * document.body.scrollHeight);`}
           // injectedJavaScriptBeforeContentLoaded={injectedJS}
           style={{ flex: 1 }}
           onMessage={onMessage}

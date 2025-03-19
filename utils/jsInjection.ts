@@ -1,11 +1,13 @@
 export const injectedJS = `
 (function() {
   document.documentElement.style.userSelect = 'none';
+  
   let headerVisible = false;
   let touchStartTime = 0;
   let touchStartY = 0;
   let touchEndY = 0;
   let isScrolling = false;
+  
   
   function toggleHeader() {
     headerVisible = !headerVisible;
@@ -30,7 +32,10 @@ document.addEventListener("touchend", (e) => {
   if (touchDuration < 200 && Math.abs(touchStartY - touchEndY) < 100 ) {
     // toggleHeader();
     window.ReactNativeWebView.postMessage("toggleHeader"); // Send message to RN
-  }
+  }else{
+  const scrollPercentage = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+  window.ReactNativeWebView.postMessage(JSON.stringify({ type: "scroll", value: scrollPercentage }));
+}
 });
 
 
