@@ -1,17 +1,17 @@
 import { StyleSheet, View } from 'react-native';
 import { Text } from './nativewindui/Text';
-import Debug from './Debug';
+// import { DebugContent } from './DebugContent';
 
-type ScreenContentProps = {
+type SettingsContentProps = {
   children?: React.ReactNode;
 };
 
-export const ScreenContent = ({ children }: ScreenContentProps) => {
+export const SettingsContent = ({ children }: SettingsContentProps) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Debug Screen</Text>
+      <Text style={styles.title}>Settings Screen</Text>
       <View style={styles.separator} />
-      <Debug />
+
       {children}
     </View>
   );
@@ -21,7 +21,8 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     flex: 1,
-    justifyContent: 'center',
+    marginVertical: 20,
+    // justifyContent: 'center',
   },
   separator: {
     backgroundColor: '#d1d5db',

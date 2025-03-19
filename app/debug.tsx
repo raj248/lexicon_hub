@@ -1,12 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
 import { Platform } from 'react-native';
 
-import { SettingsContent } from '~/components/SettingsContent';
+import { DebugContent } from '~/components/DebugContent';
 
 export default function Settings() {
   return (
     <>
-      <SettingsContent />
+      <DebugContent />
       <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
     </>
   );

@@ -146,11 +146,11 @@ export default function FloatingHeader({
         style={[
           {
             position: "absolute",
-            bottom: 20,
+            bottom: 40,
             left: "50%",
             transform: [{ translateX: -containerWidth / 2 }, { translateY: slideAnim }],
             flexDirection: "row",
-            gap: 20,
+            gap: 30,
             backgroundColor: colors.card,
             borderRadius: 10,
             opacity: buttonOpacity, // Controls visibility

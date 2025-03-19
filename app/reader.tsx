@@ -10,6 +10,7 @@ import { EPUBHandler } from "~/epub-core";
 import { injectedJS } from "~/utils/jsInjection";
 import { useProgressStore } from "~/stores/progressStore";
 import { usePreferencesStore } from "~/stores/preferenceStore";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function ReaderScreen() {
   const navigation = useNavigation();
@@ -24,6 +25,7 @@ export default function ReaderScreen() {
   const [index, setIndex] = useState<number>(12);
   const [headerVisibility, setHeaderVisibility] = useState(false);
   const [chapterListVisibility, setChapterListVisibility] = useState(false);
+  const { colors } = useColorScheme()
 
   const preferences = usePreferencesStore((state) => state.preferences);
   const [webViewKey, setWebViewKey] = useState(0); // Unique key for WebView
@@ -128,9 +130,9 @@ export default function ReaderScreen() {
   }, [preferences]);
 
   return (
-    <View className="flex-1">
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {loading ? (
-        <ActivityIndicator size="large" className="flex-1 justify-center" />
+        <ActivityIndicator size="large" className="flex-1 justify-center" color={preferences.readingMode} />
       ) : (
         <WebView
           // ref={webViewRef}
@@ -139,7 +141,7 @@ export default function ReaderScreen() {
           source={{ html: content }}
           injectedJavaScript={injectedJS + `window.scrollTo(0, ${(initialScroll.current / 100)} * document.body.scrollHeight);`}
           // injectedJavaScriptBeforeContentLoaded={injectedJS}
-          style={{ flex: 1 }}
+          style={{ flex: 1, backgroundColor: colors.background }}
           onMessage={onMessage}
           onLoadEnd={() => {
             console.log("Webview loaded");

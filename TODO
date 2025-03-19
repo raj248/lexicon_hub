@@ -1,9 +1,9 @@
-NEXT: add next/prev Chapter button
+NEXT: implement feat: settings
+Custom themes & font settings: Light, dark, sepia, and adjustable fonts.
 
 1️⃣ UI/UX Enhancements
 
     Smooth scrolling & pagination: Improve navigation between chapters.
-    Custom themes & font settings: Light, dark, sepia, and adjustable fonts.
     Margin, spacing, and text size controls: Improve readability.
 
 2️⃣ Advanced Reading Features
@@ -24,7 +24,6 @@ NEXT: add next/prev Chapter button
     Google Drive or Firebase backup: Option for file-based backup.
 
 implement feat: backup
-implement feat: settings
 implement feat: preferences
 implement feat: watching for webnovel updates (web scraping/ crawling)
 

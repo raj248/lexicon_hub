@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { useRuntimeStore } from '~/stores/useRuntimeStore';
 import { SettingsIcon } from '~/components/SettingsIcon';
+import { DebugIcon } from './DebugIcon';
 import Animated, { runOnJS, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Icon } from '@roninoss/icons';
 
@@ -76,6 +77,8 @@ export function FloatingHeader({ title, showSearchBar = true, showSettingsIcon =
               </Pressable>
             )}
             {showSettingsIcon && <SettingsIcon />}
+
+            <DebugIcon />
           </View>
         </View>
       </Pressable>

@@ -13,7 +13,7 @@ const epubPath = "/storage/emulated/0/Books/The Ideal Sponger Life Vol 13.epub"
 const opfPath = "OEBPS/content.opf"
 const coverImage = "OEBPS/Images/Cover.jpg"
 
-export default function Debug() {
+export function DebugContent() {
   const epub = new EPUBHandler()
   const { debugClear } = useBookStore.getState()
   useEffect(() => {

@@ -14,10 +14,8 @@ import { NAV_THEME } from '~/theme';
 import { useEffect } from 'react';
 import * as NavigationBar from 'expo-navigation-bar';
 
-import * as EpubKit from 'modules/epub-kit';
 import * as FileUtil from 'modules/FileUtil'
 import Toast from 'react-native-toast-message';
-import { ReaderProvider } from '@epubjs-react-native/core';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -50,6 +48,7 @@ export default function RootLayout() {
               <Stack screenOptions={SCREEN_OPTIONS}>
                 <Stack.Screen name="(tabs)" options={TABS_OPTIONS} />
                 <Stack.Screen name="settings" options={SETTINGS_OPTIONS} />
+                <Stack.Screen name="debug" options={DEBUG_OPTIONS} />
                 <Stack.Screen name="bookDetails" options={DETAILS_OPTIONS} />
                 <Stack.Screen name='reader' />
               </Stack>
@@ -73,6 +72,13 @@ const SETTINGS_OPTIONS = {
   presentation: 'modal',
   animation: 'fade_from_bottom', // for android
   title: 'Settings',
+  headerRight: () => <ThemeToggle />,
+} as const;
+
+const DEBUG_OPTIONS = {
+  presentation: 'modal',
+  animation: 'fade_from_bottom', // for android
+  title: 'DEBUG',
   headerRight: () => <ThemeToggle />,
 } as const;
 

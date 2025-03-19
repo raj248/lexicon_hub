@@ -1,20 +1,9 @@
 import { Tabs } from 'expo-router';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { TabBarIcon } from '../../components/TabBarIcon';
-import { FloatingHeader } from '~/components/Header';
-import * as EpubKit from '~/modules/epub-kit';
+import { FloatingHeader } from '~/components/HomeHeader';
 
-import { useEffect } from 'react';
-
-const testFile = "/storage/emulated/0/Books/LN/Trapped in a Dating Sim The World of Otome Games is Tough for Mobs vol 10.epub"
 export default function TabLayout() {
-  useEffect(() => {
-    async function loadMetadata() {
-      const metadata = await EpubKit.extractMetadata(testFile);
-      console.log("Metadata from native module:", metadata);
-    }
-    // loadMetadata();
-  }, []);
   const { colors } = useColorScheme();
 
   return (
