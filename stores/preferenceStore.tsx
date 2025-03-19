@@ -1,25 +1,29 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-
 // 3️⃣ Preferences Store (User Settings)
 export type PreferencesData = {
-  readingMode?: "Light" | "Dark" | "Sepia";
+  readingMode: "light" | "dark" | "sepia";
   fontSize: number;
 };
 
 type PreferencesStore = {
   preferences: PreferencesData;
   setFontSize: (fontSize: number) => void;
+  getReadingMode: () => "light" | "dark" | "sepia";
   updatePreferences: (prefs: Partial<PreferencesData>) => void;
 };
 
 export const usePreferencesStore = create<PreferencesStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       preferences: {
-        readingMode: "Light",
+        readingMode: "dark",
         fontSize: 24,
+      },
+
+      getReadingMode: () => {
+        return get().preferences.readingMode;
       },
 
       // Update preferences

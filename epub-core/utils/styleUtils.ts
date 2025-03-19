@@ -1,22 +1,26 @@
 import { usePreferencesStore } from "~/stores/preferenceStore";
-
+import { useColorScheme } from "~/lib/useColorScheme";
+import {COLORS} from "~/theme/colors"
 export function injectStyles(htmlContent: string): string {
-    const preferences = usePreferencesStore.getState().preferences
+  const preferences = usePreferencesStore.getState().preferences
+  const colors = preferences.readingMode=="dark"? COLORS.dark:COLORS.light;
+  console.log(preferences.readingMode)
   return htmlContent.replace(
     "</head>",
     `<style>
       body {
         font-family: 'Arial', sans-serif;
         line-height: ${1.8};
-        color: #${333};
+        color: ${colors.foreground};
+        background-color: ${colors.background};
         margin: 20px;
         padding: 20px;
         font-size: ${preferences.fontSize}px;
       }
       h1 {
-        color: #444;
+        color: ${colors.foreground};
         text-align: center;
-        font-size: ${preferences.fontSize + 5}px;
+        font-size: ${preferences.fontSize + 7}px;
       }
       p {
         margin: 12px 0;

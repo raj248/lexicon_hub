@@ -9,6 +9,7 @@ import ChapterListModal from "~/components/ChapterListModal";
 import { EPUBHandler } from "~/epub-core";
 import { injectedJS } from "~/utils/jsInjection";
 import { useProgressStore } from "~/stores/progressStore";
+import { usePreferencesStore } from "~/stores/preferenceStore";
 
 export default function ReaderScreen() {
   const navigation = useNavigation();
@@ -24,8 +25,10 @@ export default function ReaderScreen() {
   const [headerVisibility, setHeaderVisibility] = useState(false);
   const [chapterListVisibility, setChapterListVisibility] = useState(false);
 
+  const preferences = usePreferencesStore((state) => state.preferences);
+  const [webViewKey, setWebViewKey] = useState(0); // Unique key for WebView
+
   let initialScroll = useRef(0);
-  const hasInitialized = useRef(false);
 
 
 
@@ -70,6 +73,7 @@ export default function ReaderScreen() {
 
   /** Load Chapter Content */
   useEffect(() => {
+    console.log(latestIndex.current)
     if (latestIndex.current === index || !epubHandler.current) return;
 
     setLoading(true);
@@ -103,6 +107,25 @@ export default function ReaderScreen() {
       useProgressStore.getState().setProgress(bookId, { readProgress: data.value, chapter: index });
     }
   };
+  // Re-render WebView when theme or fontSize changes
+  useEffect(() => {
+    if (!epubHandler.current) return;
+    epubHandler.current
+      .getChapter(index)
+      .then((res) => {
+        if (res) setContent(res);
+        const progress = useProgressStore.getState().getProgress(bookId);
+        if (progress) {
+          if (progress.chapter !== index) {
+            useProgressStore.getState().setProgress(bookId, { readProgress: 0, chapter: index });
+            initialScroll.current = 0;
+          }
+          // initialScroll.current = progress?.readProgress || 0;
+          console.log("scroll", progress?.readProgress, initialScroll.current)
+        }
+
+      })
+  }, [preferences]);
 
   return (
     <View className="flex-1">
@@ -110,7 +133,8 @@ export default function ReaderScreen() {
         <ActivityIndicator size="large" className="flex-1 justify-center" />
       ) : (
         <WebView
-          ref={webViewRef}
+          // ref={webViewRef}
+          // key={webViewKey}
           originWhitelist={['*']}
           source={{ html: content }}
           injectedJavaScript={injectedJS + `window.scrollTo(0, ${(initialScroll.current / 100)} * document.body.scrollHeight);`}

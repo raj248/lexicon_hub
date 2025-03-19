@@ -40,6 +40,7 @@ export default function FloatingHeader({
     setSwitching(true);
     requestAnimationFrame(() => {
       toggleColorScheme(); // Switch theme
+      // usePreferencesStore.getState().updatePreferences({ readingMode: isDarkColorScheme ? "dark" : "light" });
       setTimeout(() => setSwitching(false), 200); // Allow UI to update
     });
   };
@@ -122,18 +123,18 @@ export default function FloatingHeader({
             ]}
           >
             <View className="flex-row justify-between items-center p-4">
-              <Text className="text-white">Change Theme</Text>
+              <Text>Change Theme</Text>
               <Appbar.Action
-                icon={isDarkColorScheme ? "weather-sunny" : "weather-night"}
+                icon={isDarkColorScheme ? "weather-night" : "weather-sunny"}
                 onPress={handleToggle}
                 color={colors.foreground}
                 disabled={switching}
               />
             </View>
             <View className="flex-row justify-between items-center px-4">
-              <Text className="text-white">Font</Text>
+              <Text>Font</Text>
               <Appbar.Action icon="chevron-left" onPress={() => setFontSize(preferences.fontSize - 1)} color={colors.foreground} />
-              <Text className="text-white">{preferences.fontSize}</Text>
+              <Text>{preferences.fontSize}</Text>
               <Appbar.Action icon="chevron-right" onPress={() => setFontSize(preferences.fontSize + 1)} color={colors.foreground} />
             </View>
           </Animated.View>
