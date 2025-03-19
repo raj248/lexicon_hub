@@ -1,11 +1,33 @@
 NEXT: add next/prev Chapter button
 
+1️⃣ UI/UX Enhancements
+
+    Smooth scrolling & pagination: Improve navigation between chapters.
+    Custom themes & font settings: Light, dark, sepia, and adjustable fonts.
+    Margin, spacing, and text size controls: Improve readability.
+
+2️⃣ Advanced Reading Features
+
+    Bookmark system: Allow users to save and jump to specific locations.
+    Highlighting & annotations: Save highlighted text and user notes.
+    Text-to-speech integration: Read aloud functionality for accessibility.
+
+3️⃣ Library & Metadata Improvements
+
+    Book metadata & covers: Fetch and display title, author, and cover.
+    Sorting & filtering: By title, author, progress, or custom tags.
+    Search within books: Implement full-text search inside EPUB content.
+
+4️⃣ Cloud Sync & Backup
+
+    GitHub Gist backup integration: Sync progress, bookmarks, and notes.
+    Google Drive or Firebase backup: Option for file-based backup.
+
 implement feat: backup
 implement feat: settings
 implement feat: preferences
 implement feat: watching for webnovel updates (web scraping/ crawling)
 
-optimize toggleHeader animation
 Integrate Flipper in This App
 
 Using MMKV with zustand persist-middleware
@@ -16,3 +38,4 @@ Use SQLite for Metadata & Caching
 Store bookmarks, highlights, and progress in a local database.
 
 Port FloatingHeader and ChapterList to render in webView (pure js and css)
+use react-native-workers (just for the sake of using it)

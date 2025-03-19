@@ -131,11 +131,20 @@ export default function ReaderScreen() {
       )}
 
       <FloatingHeader
-        toggleChapterList={toggleChapterList} headerVisibility={headerVisibility} setHeaderVisibility={setHeaderVisibility}
+        toggleChapterList={toggleChapterList}
+        headerVisibility={headerVisibility}
+        setHeaderVisibility={setHeaderVisibility}
+        goToNextChapter={() => setIndex(index + 1)}
+        isNextAvailable={(epubHandler.current?.getSpine()?.length ?? 0) - 1 <= index}
+        isPrevAvailable={index <= 0}
+        goToPrevChapter={() => setIndex(index - 1)}
       />
 
       <ChapterListModal
-        toggleChapterList={toggleChapterList} chapterListVisibility={chapterListVisibility} toc={epubHandler.current?.getToc()} callBack={setChapterIndex}
+        toggleChapterList={toggleChapterList}
+        chapterListVisibility={chapterListVisibility}
+        toc={epubHandler.current?.getToc()}
+        callBack={setChapterIndex}
       />
     </View>
   );

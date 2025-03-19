@@ -9,7 +9,6 @@ import { useProgressStore } from "~/stores/progressStore";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { Button } from "~/components/Button";
 import { Image } from "expo-image";
-import * as EpubKit from '~/modules/epub-kit';
 import { Icon } from "react-native-paper";
 
 export default function BookDetailsScreen() {
@@ -18,7 +17,7 @@ export default function BookDetailsScreen() {
   const { bookId } = useLocalSearchParams();
   const { books } = useBookStore();
   const { progress } = useProgressStore();
-  const [readingStatus, setReadingStatus] = useState<React.SetStateAction<string>>(progress.bookId?.readingStatus || "Not Started");
+  const [readingStatus, setReadingStatus] = useState<React.SetStateAction<string>>(progress.bookId?.status || "Not Started");
 
   const book = books[bookId as string];
   if (!book) return <Text style={{ padding: 16, color: colors.destructive }}>Book not found.</Text>;

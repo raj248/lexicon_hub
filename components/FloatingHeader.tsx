@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Modal, TouchableWithoutFeedback } from "react-native";
+import { View, Modal, TouchableWithoutFeedback, TouchableOpacity } from "react-native";
 import { Appbar } from "react-native-paper";
 import { useColorScheme } from "~/lib/useColorScheme";
 import Animated, {
@@ -17,13 +17,19 @@ export default function FloatingHeader({
   setHeaderVisibility,
   goToPrevChapter,
   goToNextChapter,
+  isNextAvailable,
+  isPrevAvailable
 }: any) {
   const [settingsExpanded, setSettingsExpanded] = useState(false);
 
   const translateX = useSharedValue(headerVisibility ? 0 : 100);
   const width = useSharedValue(60);
+  const headerOpacity = useSharedValue(0);
   const newViewOpacity = useSharedValue(0);
   const newViewTranslateX = useSharedValue(50);
+
+  const slideAnim = useSharedValue(headerVisibility ? 0 : 50);
+  const buttonOpacity = useSharedValue(headerVisibility ? 1 : 0);
 
   const { preferences, setFontSize } = usePreferencesStore();
   const { colors, isDarkColorScheme, toggleColorScheme } = useColorScheme();
@@ -39,18 +45,26 @@ export default function FloatingHeader({
   };
 
   useEffect(() => {
-    width.value = withTiming(settingsExpanded ? 300 : 60, { duration: 400 });
-    newViewOpacity.value = withTiming(settingsExpanded ? 1 : 0, { duration: 300 });
+    if (!headerVisibility) setHeaderVisibility(true)
+    width.value = withTiming(settingsExpanded ? 320 : 60, { duration: 400 });
+    newViewOpacity.value = withTiming(settingsExpanded ? 1 : 0, { duration: 600 });
     newViewTranslateX.value = withTiming(settingsExpanded ? 0 : 50, { duration: 300 });
   }, [settingsExpanded]);
 
   useEffect(() => {
     if (!headerVisibility) setSettingsExpanded(false);
-    translateX.value = withTiming(headerVisibility ? 0 : 100, { duration: 0 });
+    translateX.value = withTiming(headerVisibility ? 0 : 100, { duration: 200 });
+    headerOpacity.value = withTiming(headerVisibility ? 1 : 0, { duration: 300 });
+  }, [headerVisibility]);
+
+  useEffect(() => {
+    slideAnim.value = withTiming(headerVisibility ? 0 : 50, { duration: 200 });
+    buttonOpacity.value = withTiming(headerVisibility ? 1 : 0, { duration: 200 });
   }, [headerVisibility]);
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
+    opacity: headerOpacity.value,
     width: width.value,
   }));
 
@@ -58,70 +72,97 @@ export default function FloatingHeader({
     opacity: newViewOpacity.value,
     transform: [{ translateX: newViewTranslateX.value }],
   }));
-
+  const [containerWidth, setContainerWidth] = useState(0);
   return (
-    // <Modal transparent visible={headerVisibility}>
-    // <TouchableWithoutFeedback onPress={() => setHeaderVisibility(false)}>
-    <Animated.View
-      pointerEvents="auto"
-      style={[
-        {
-          position: "absolute",
-          right: 20,
-          top: "30%", // Correct absolute positioning
-          backgroundColor: "grey",
-          borderRadius: 16,
-          paddingVertical: 10,
-          alignItems: "flex-start",
-          elevation: 4,
-          flexDirection: "row", // Ensure items are stacked vertically
-          // justifyContent: "space-between",
-          width: 60, // Set a defined width
-        },
-        animatedStyles,
-      ]}
-    >
-      <View className="flex-col items-center justify-center">
-        <Appbar.Action icon="arrow-left" onPress={() => router.back()} color={colors.background} />
-        <Appbar.Action icon="bookmark" onPress={() => { }} color={colors.background} />
-        <Appbar.Action icon="cog" onPress={() => setSettingsExpanded(!settingsExpanded)} color={colors.background} />
-        <Appbar.Action icon="file-document-outline" onPress={toggleChapterList} color={colors.background} />
-      </View>
+    <>
+      <Animated.View
+        pointerEvents="auto"
+        style={[
+          {
+            flex: 1,
 
-      {/* Expanded Settings View */}
-      {settingsExpanded && (
-        <Animated.View
-          style={[
-            {
-              flex: 1,
-              backgroundColor: "grey",
-              borderRadius: 10,
-              padding: 10,
-              width: 150, // Give it a defined width
-            },
-            newViewStyles,
-          ]}
-        >
-          <View className="flex-row justify-between items-center p-4">
-            <Text className="text-white">Change Theme</Text>
-            <Appbar.Action
-              icon={isDarkColorScheme ? "weather-sunny" : "weather-night"}
-              onPress={handleToggle}
-              color={colors.background}
-              disabled={switching}
-            />
-          </View>
-          <View className="flex-row justify-between items-center px-4">
-            <Text className="text-white">Font</Text>
-            <Appbar.Action icon="chevron-left" onPress={() => setFontSize(preferences.fontSize - 1)} color={colors.background} />
-            <Text className="text-white">{preferences.fontSize}</Text>
-            <Appbar.Action icon="chevron-right" onPress={() => setFontSize(preferences.fontSize + 1)} color={colors.background} />
-          </View>
-        </Animated.View>
-      )}
-    </Animated.View>
+            position: "absolute",
+            right: 20,
+            top: "30%",
+            backgroundColor: colors.card,
+            borderRadius: 16,
+            paddingVertical: 10,
+            alignItems: "flex-start",
+            elevation: 4,
+            flexDirection: "row",
+            // justifyContent: "space-between",
+            width: 60,
+            height: 230,
+          },
+          animatedStyles,
+        ]}
+      >
+        <View className="flex-col items-center justify-center">
+          <Appbar.Action icon="arrow-left" onPress={() => router.back()} color={colors.foreground} />
+          <Appbar.Action icon="bookmark" onPress={() => { }} color={colors.foreground} />
+          <Appbar.Action icon="cog" onPress={() => setSettingsExpanded(!settingsExpanded)} color={colors.foreground} />
+          <Appbar.Action icon="file-document-outline" onPress={toggleChapterList} color={colors.foreground} />
+        </View>
 
-    // </TouchableWithoutFeedback>
-    // </Modal>
+        {settingsExpanded && (
+          <Animated.View
+            style={[
+              {
+                backgroundColor: colors.grey5,
+                borderRadius: 10,
+                justifyContent: "center",
+                alignItems: "center",
+                paddingRight: 20,
+                width: "80%",
+                // height: 200,
+                height: "100%",
+                overflow: "hidden",
+              },
+              newViewStyles,
+            ]}
+          >
+            <View className="flex-row justify-between items-center p-4">
+              <Text className="text-white">Change Theme</Text>
+              <Appbar.Action
+                icon={isDarkColorScheme ? "weather-sunny" : "weather-night"}
+                onPress={handleToggle}
+                color={colors.foreground}
+                disabled={switching}
+              />
+            </View>
+            <View className="flex-row justify-between items-center px-4">
+              <Text className="text-white">Font</Text>
+              <Appbar.Action icon="chevron-left" onPress={() => setFontSize(preferences.fontSize - 1)} color={colors.foreground} />
+              <Text className="text-white">{preferences.fontSize}</Text>
+              <Appbar.Action icon="chevron-right" onPress={() => setFontSize(preferences.fontSize + 1)} color={colors.foreground} />
+            </View>
+          </Animated.View>
+        )}
+      </Animated.View>
+
+      <Animated.View
+        onLayout={(event) => setContainerWidth(event.nativeEvent.layout.width)}
+        style={[
+          {
+            position: "absolute",
+            bottom: 20,
+            left: "50%",
+            transform: [{ translateX: -containerWidth / 2 }, { translateY: slideAnim }],
+            flexDirection: "row",
+            gap: 20,
+            backgroundColor: colors.card,
+            borderRadius: 10,
+            opacity: buttonOpacity, // Controls visibility
+          },
+        ]}
+      >
+        <TouchableOpacity onPress={goToPrevChapter} disabled={isPrevAvailable}>
+          <Appbar.Action icon="chevron-left" color={colors.foreground} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={goToNextChapter} disabled={isNextAvailable}>
+          <Appbar.Action icon="chevron-right" color={colors.foreground} />
+        </TouchableOpacity>
+      </Animated.View>
+    </>
   );
 }
