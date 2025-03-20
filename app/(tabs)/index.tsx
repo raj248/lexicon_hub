@@ -104,10 +104,10 @@ export default function LibraryTab() {
                 .delay(500)
                 .duration(500)
                 .easing(Easing.sin)}
-              exiting={BounceOut
-                .delay(200)
-                .duration(300)
-                .easing(Easing.inOut(Easing.elastic(2)))}
+            // exiting={BounceOut
+            //   .delay(200)
+            //   .duration(300)
+            //   .easing(Easing.inOut(Easing.elastic(2)))}
             >
               <Pressable
                 className="p-2 rounded-lg"

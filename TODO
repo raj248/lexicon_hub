@@ -1,8 +1,9 @@
 NEXT:
+4️⃣ Cloud Sync & Backup
+GitHub Gist backup integration: Sync progress, bookmarks, and notes.
+Google Drive or Firebase backup: Option for file-based backup.
 
-1️⃣ UI/UX Enhancements
-
-    Smooth scrolling & pagination: Improve navigation between chapters.
+implement feat: backup
 
 2️⃣ Advanced Reading Features
 
@@ -16,12 +17,6 @@ NEXT:
     Sorting & filtering: By title, author, progress, or custom tags.
     Search within books: Implement full-text search inside EPUB content.
 
-4️⃣ Cloud Sync & Backup
-
-    GitHub Gist backup integration: Sync progress, bookmarks, and notes.
-    Google Drive or Firebase backup: Option for file-based backup.
-
-implement feat: backup
 implement feat: preferences
 implement feat: watching for webnovel updates (web scraping/ crawling)
 
@@ -82,4 +77,8 @@ Screen Orientation: Auto / Portrait / Landscape
 implement feat: settings
 Custom themes & font settings: Light, dark, sepia, and adjustable fonts.
 
-    Margin, spacing, and text size controls: Improve readability.
+Margin, spacing, and text size controls: Improve readability.
+
+Smooth scrolling & pagination: Improve navigation between chapters.
+
+1️⃣ UI/UX Enhancements

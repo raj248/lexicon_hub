@@ -3,7 +3,7 @@ export const injectedJS = `
   document.documentElement.style.userSelect = 'none';
   
   document.body.style.overflowY = 'scroll'; 
-  document.documentElement.style.scrollBehavior = 'smooth';
+  // document.documentElement.style.scrollBehavior = 'smooth';
 
   let headerVisible = false;
   let touchStartTime = 0;
