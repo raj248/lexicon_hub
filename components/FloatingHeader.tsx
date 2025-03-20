@@ -31,7 +31,7 @@ export default function FloatingHeader({
   const slideAnim = useSharedValue(headerVisibility ? 0 : 50);
   const buttonOpacity = useSharedValue(headerVisibility ? 1 : 0);
 
-  const { preferences, setFontSize } = usePreferencesStore();
+  const preferences = usePreferencesStore();
   const { colors, isDarkColorScheme, toggleColorScheme } = useColorScheme();
   const [switching, setSwitching] = useState(false);
 
@@ -133,9 +133,9 @@ export default function FloatingHeader({
             </View>
             <View className="flex-row justify-between items-center px-4">
               <Text>Font</Text>
-              <Appbar.Action icon="chevron-left" onPress={() => setFontSize(preferences.fontSize - 1)} color={colors.foreground} />
+              <Appbar.Action icon="chevron-left" onPress={() => preferences.setFontSize(preferences.fontSize - 1)} color={colors.foreground} />
               <Text>{preferences.fontSize}</Text>
-              <Appbar.Action icon="chevron-right" onPress={() => setFontSize(preferences.fontSize + 1)} color={colors.foreground} />
+              <Appbar.Action icon="chevron-right" onPress={() => preferences.setFontSize(preferences.fontSize + 1)} color={colors.foreground} />
             </View>
           </Animated.View>
         )}

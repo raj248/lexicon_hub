@@ -72,7 +72,8 @@
     "react-native-webview": "13.12.5",
     "react-native-xml2js": "^1.0.3",
     "tailwind-merge": "^2.2.1",
-    "zustand": "^4.5.1"
+    "zustand": "^4.5.1",
+    "expo-screen-orientation": "~8.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

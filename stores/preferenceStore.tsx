@@ -1,42 +1,37 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-// 3️⃣ Preferences Store (User Settings)
-export type PreferencesData = {
-  readingMode: "light" | "dark" | "sepia";
-  fontSize: number;
-};
+
 
 type PreferencesStore = {
-  preferences: PreferencesData;
-  setFontSize: (fontSize: number) => void;
-  getReadingMode: () => "light" | "dark" | "sepia";
-  updatePreferences: (prefs: Partial<PreferencesData>) => void;
+  theme: "light" | "dark" | "system";
+  fontSize: number;
+  lineSpacing: "compact" | "normal" | "spacious";
+  orientation: "auto" | "portrait" | "landscape";
+  margin: number;
+
+  setTheme: (theme: PreferencesStore["theme"]) => void;
+  setFontSize: (size: number) => void;
+  setMargin: (margin: number) => void;
+  setLineSpacing: (spacing: PreferencesStore["lineSpacing"]) => void;
+  setOrientation: (orientation: PreferencesStore["orientation"]) => void;
 };
+
 
 export const usePreferencesStore = create<PreferencesStore>()(
   persist(
     (set, get) => ({
-      preferences: {
-        readingMode: "dark",
-        fontSize: 24,
-      },
+      theme: "system",
+      fontSize: 16,
+      margin: 16,
+      lineSpacing: "normal",
+      orientation: "auto",
 
-      getReadingMode: () => {
-        return get().preferences.readingMode;
-      },
-
-      // Update preferences
-      updatePreferences: (prefs) =>
-        set((state) => ({
-          preferences: { ...state.preferences, ...prefs },
-        })),
-
-      // Set Font Size
-      setFontSize: (fontSize) =>
-        set((state) => ({
-          preferences: { ...state.preferences, fontSize },
-        })),
+      setTheme: (theme) => set({ theme }),
+      setFontSize: (size) => set({ fontSize: size }),
+      setMargin: (margin) => set({ margin }),
+      setLineSpacing: (spacing) => set({ lineSpacing: spacing }),
+      setOrientation: (orientation) => set({ orientation }),
     }),
     {
       name: "preferences-store",

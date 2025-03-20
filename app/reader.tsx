@@ -27,7 +27,7 @@ export default function ReaderScreen() {
   const [chapterListVisibility, setChapterListVisibility] = useState(false);
   const { colors } = useColorScheme()
 
-  const preferences = usePreferencesStore((state) => state.preferences);
+  const preferences = usePreferencesStore((state) => state);
   const [webViewKey, setWebViewKey] = useState(0); // Unique key for WebView
 
   let initialScroll = useRef(0);
@@ -132,11 +132,12 @@ export default function ReaderScreen() {
   return (
     <View className="flex-1" style={{ backgroundColor: colors.background }}>
       {loading ? (
-        <ActivityIndicator size="large" className="flex-1 justify-center" color={preferences.readingMode} />
+        <ActivityIndicator size="large" className="flex-1 justify-center" color={preferences.theme} />
       ) : (
         <WebView
-          // ref={webViewRef}
-          // key={webViewKey}
+          ref={webViewRef}
+          key={webViewKey}
+          androidLayerType="hardware"
           originWhitelist={['*']}
           source={{ html: content }}
           injectedJavaScript={injectedJS + `window.scrollTo(0, ${(initialScroll.current / 100)} * document.body.scrollHeight);`}

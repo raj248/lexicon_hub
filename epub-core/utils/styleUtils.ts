@@ -1,10 +1,9 @@
 import { usePreferencesStore } from "~/stores/preferenceStore";
-import { useColorScheme } from "~/lib/useColorScheme";
 import {COLORS} from "~/theme/colors"
 export function injectStyles(htmlContent: string): string {
-  const preferences = usePreferencesStore.getState().preferences
-  const colors = preferences.readingMode=="dark"? COLORS.dark:COLORS.light;
-  console.log(preferences.readingMode)
+  const preferences = usePreferencesStore.getState()
+  const colors = preferences.theme=="dark"? COLORS.dark:COLORS.light;
+  console.log(preferences.theme)
   return htmlContent.replace(
     "</head>",
     `<style>

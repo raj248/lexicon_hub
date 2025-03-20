@@ -2,6 +2,9 @@ export const injectedJS = `
 (function() {
   document.documentElement.style.userSelect = 'none';
   
+  document.body.style.overflowY = 'scroll'; 
+  document.documentElement.style.scrollBehavior = 'smooth';
+
   let headerVisible = false;
   let touchStartTime = 0;
   let touchStartY = 0;

@@ -17,6 +17,10 @@ import * as NavigationBar from 'expo-navigation-bar';
 import * as FileUtil from 'modules/FileUtil'
 import Toast from 'react-native-toast-message';
 
+import { usePreferencesStore } from '~/stores/preferenceStore';
+import { Appearance } from "react-native";
+import { setScreenOrientation } from '~/lib/screenRotation';
+
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
@@ -30,7 +34,19 @@ export default function RootLayout() {
     FileUtil.RequestStoragePermission()
   }, []);
   useInitialAndroidBarSync();
-  const { colorScheme, isDarkColorScheme } = useColorScheme();
+
+  const { colorScheme, isDarkColorScheme, setColorScheme } = useColorScheme();
+  const theme = usePreferencesStore((state) => state.theme);
+  const orientation = usePreferencesStore((state) => state.orientation);
+  const systemColorScheme = Appearance.getColorScheme();
+  useEffect(() => {
+    const currentTheme = theme === "system" ? systemColorScheme ?? "light" : theme;
+    setColorScheme(currentTheme);
+  }, [theme])
+
+  useEffect(() => {
+    setScreenOrientation(orientation)
+  }, [orientation])
 
   // Hide the navigation bar when the app starts
 

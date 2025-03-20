@@ -1,10 +1,8 @@
-NEXT: implement feat: settings
-Custom themes & font settings: Light, dark, sepia, and adjustable fonts.
+NEXT:
 
 1️⃣ UI/UX Enhancements
 
     Smooth scrolling & pagination: Improve navigation between chapters.
-    Margin, spacing, and text size controls: Improve readability.
 
 2️⃣ Advanced Reading Features
 
@@ -27,6 +25,39 @@ implement feat: backup
 implement feat: preferences
 implement feat: watching for webnovel updates (web scraping/ crawling)
 
+1. Appearance & Reader Settings
+
+2. Reading Preferences
+
+   Page Turn Animation: Slide / Fade / None
+   Auto-Scroll Speed: Slow / Medium / Fast (or a slider)
+   Enable Scroll Mode: Toggle (Paged or Continuous scrolling)
+   Night Mode Auto-Adjust: Toggle (Enable auto night mode at night)
+   Tap Zones for Navigation: Toggle (Allow tap gestures to change pages)
+
+3. Library Management
+
+   Default Library Sorting: Alphabetical / Recently Read / Date Added
+   Auto-Sync Library: Toggle (Sync EPUBs automatically)
+   Default Storage Location: Internal / External Storage
+   Backup Library to Cloud: Manual / Auto-Save (GitHub Gist, Firebase, or Drive)
+   Auto-Delete Removed Books: Toggle (Remove EPUBs that no longer exist in storage)
+
+4. Discover & Web Scraping
+
+   Default Sources for Web Novels: Choose from multiple sources
+   Auto-Check for New Chapters: Toggle
+   Use Built-in Web Scraper: Toggle
+   Enable Ads (Optional): Toggle (To support the app)
+
+5. Performance & Miscellaneous
+
+   Enable Hardware Acceleration: Toggle
+   Enable Background Updates: Toggle
+   Cache Size Limit: 50MB / 100MB / No Limit
+   Enable Debug Mode: Toggle (For logs & performance insights)
+   Reset All Preferences: Button
+
 Integrate Flipper in This App
 
 Using MMKV with zustand persist-middleware
@@ -38,3 +69,17 @@ Store bookmarks, highlights, and progress in a local database.
 
 Port FloatingHeader and ChapterList to render in webView (pure js and css)
 use react-native-workers (just for the sake of using it)
+
+DONE:
+
+Theme Selection: Light / Dark / System Default
+Font Size: Small / Medium / Large / Custom Slider
+Font Family: Serif / Sans-serif / Monospace
+Line Spacing: Compact / Normal / Spacious
+Text Alignment: Left / Justified
+Screen Orientation: Auto / Portrait / Landscape
+
+implement feat: settings
+Custom themes & font settings: Light, dark, sepia, and adjustable fonts.
+
+    Margin, spacing, and text size controls: Improve readability.
