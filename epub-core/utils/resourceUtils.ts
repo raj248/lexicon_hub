@@ -5,26 +5,39 @@ import { readFileFromZip } from "~/modules/FileUtil";
 const CACHE_DIR = `${FileSystem.cacheDirectory}epub_resources/`;
 
 export async function extractAndRewriteImages(htmlContent: string, resources: Record<string, string>): Promise<string> {
-  const matches = [...htmlContent.matchAll(/<img [^>]*src=["']([^"']+)["'][^>]*>/g)];
+  // Use Cheerio for proper HTML parsing
+  const $ = cheerio.load(htmlContent);
 
-  const updatedHtmlParts = await Promise.all(
-    matches.map(async ([match, src]) => {
-      const resourceData = resources[src];
+  // Replace <img src="...">
+  $("img").each((_: any, el: any) => {
+    const src = $(el).attr("src");
+    if (src && resources[src]) {
+      const extension = src.split(".").pop()?.toLowerCase() || "jpg";
+      const mimeType = extension === "png" ? "image/png" :
+                       extension === "jpg" || extension === "jpeg" ? "image/jpeg" :
+                       "application/octet-stream";
 
-      if (resourceData) {
-        const extension = src.split(".").pop();
-        const mimeType = extension === "png" ? "image/png" :
-                         extension === "jpg" || extension === "jpeg" ? "image/jpeg" :
-                         "application/octet-stream";
-        return match.replace(src, `data:image/${extension};base64,${resourceData}`);
-      }
+      $(el).attr("src", `data:${mimeType};base64,${resources[src]}`);
+    }
+  });
 
-      return match;
-    })
-  );
+  // Replace <svg><image xlink:href="...">
+  $("svg image").each((_: any, el: any) => {
+    const src = $(el).attr("href") || "";
+    console.log("src: ", Object.keys(resources))
+    if (src && resources[src]) {
+      const extension = src.split(".").pop()?.toLowerCase() || "jpg";
+      const mimeType = extension === "png" ? "image/png" :
+                       extension === "jpg" || extension === "jpeg" ? "image/jpeg" :
+                       "application/octet-stream";
+      $(el).attr("href", `data:${mimeType};base64,${resources[src]}`);
+      $(el).removeAttr("xlink:href"); // Remove deprecated attribute
+    }
+  });
 
-  return htmlContent.replace(/<img [^>]*src=["']([^"']+)["'][^>]*>/g, () => updatedHtmlParts.shift()!);
+  return $.html();
 }
+
 
 export async function extractResourceBase64(
   zipPath: string,
@@ -33,9 +46,10 @@ export async function extractResourceBase64(
   const $ = cheerio.load(content);
 
   // Extract all relevant resource paths
-  const resourcePaths = $("img, link, script")
-    .map((_: any, el: any) => $(el).attr("src") || $(el).attr("href") || "")
-    .get();
+  const resourcePaths = $("img, link, script, svg image")
+  .map((_: any, el: any) => $(el).attr("src") || $(el).attr("href") || $(el).attr("xlink:href") || "")
+  .get();
+
   console.log("Resource paths: ",resourcePaths)
   const resourceBase64Map: Record<string, string> = {};
 

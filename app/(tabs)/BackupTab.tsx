@@ -3,7 +3,7 @@ import { View, ScrollView, TouchableOpacity } from "react-native";
 import { ActivityIndicator } from "~/components/nativewindui/ActivityIndicator";
 import { Text } from "~/components/nativewindui/Text";
 import { Toggle } from "~/components/nativewindui/Toggle";
-import { useGitHubStore } from "~/stores/githubStore";
+import { useGitHubStore } from "~/github/githubStore";
 
 export default function BackupSyncTab() {
   const { lastBackup, autoBackup, setAutoBackup, backupNow, restoreFromGitHub } = useGitHubStore();

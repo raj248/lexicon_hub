@@ -1,141 +1,98 @@
-import { InteractionManager, StyleSheet, View } from 'react-native';
-import { Text } from './nativewindui/Text';
-import { Button } from './nativewindui/Button';
-// import { Button } from '~/components/Button';
-
-import { EPUBHandler } from "epub-core"
-import { ScanFiles, readFileFromZip } from '~/modules/FileUtil';
-import { useEffect } from 'react';
-import { useBookStore } from '~/stores/bookStore';
-
-const className_button = 'm-4 p-4'
-const epubPath = "/storage/emulated/0/Books/The Ideal Sponger Life Vol 13.epub"
-const opfPath = "OEBPS/content.opf"
-const coverImage = "OEBPS/Images/Cover.jpg"
+import React, { useState } from "react";
+import { View, ScrollView } from "react-native";
+import { Text } from "./nativewindui/Text";
+import { Button } from "./nativewindui/Button";
+import { useGitHubStore } from "~/github/githubStore";
+import { checkOrCreateIndexRepo } from "~/utils/initializeGitHub";
 
 export function DebugContent() {
-  const epub = new EPUBHandler()
-  const { debugClear } = useBookStore.getState()
-  useEffect(() => {
-    // console.log(useBookStore.getState().books)
-    const startAsync = async () => {
-      // await epub.loadFile("file://storage/emulated/0/Books/The Ideal Sponger Life Vol 13.epub")
-    }
-    startAsync();
-  }, [])
+  const { addCredentials, backupNow, restoreFromGitHub, lastBackup, setAutoBackup, setEncryption, autoBackup, useEncryption } = useGitHubStore();
+  const [restoredData, setRestoredData] = useState<any>(null);
+  const [credentials, setCredentials] = useState({
+    owner: "",
+    repo: "",
+    branch: "",
+    token: ""
+  });
 
-  function onPressDebug() {
-    (async () => {
-      console.log("Start reading file...");
-
-      const startTime = performance.now(); // Start timer
-
-      const content = await readFileFromZip(epubPath, coverImage, "base64").catch(err => {
-        console.log("Error:", err);
-        return null;
-      });
-
-      const endTime = performance.now(); // End timer
-      console.log("Finished reading file.");
-
-      if (content) {
-        console.log("Content Length:", content.length);
-      }
-
-      console.log(`Execution Time: ${(endTime - startTime).toFixed(2)}ms`);
-
-      const runs = 1;
-      let totalTime = 0;
-      for (let i = 0; i < runs; i++) {
-        const start = performance.now();
-        await readFileFromZip(epubPath, coverImage, "base64");
-        const end = performance.now();
-        totalTime += end - start;
-      }
-      console.log(`Average Time: ${totalTime / runs}ms`);
-    })();
+  async function handleBackup() {
+    console.log("Starting backup...");
+    await backupNow({ progress: "Sample Progress" }, { books: "Sample Books" }, { watchlist: "Sample Watchlist" });
+    console.log("Backup completed.");
   }
 
-  function onPressEpubCore() {
-    (async () => {
-      console.log("Starting EPUB Load & Extract Test...");
-      const startLoad = performance.now();
-      await epub.loadFile("file://storage/emulated/0/Books/The Ideal Sponger Life Vol 13.epub", true);
-      const endLoad = performance.now();
-      console.log(`📖 EPUB Load Time: ${(endLoad - startLoad).toFixed(2)}ms`);
-
-      const startExtract = performance.now();
-      const content = await epub.extractChapter("Text/prologue.xhtml");
-      const endExtract = performance.now();
-      console.log(`📄 Chapter Extract Time: ${(endExtract - startExtract).toFixed(2)}ms`);
-
-      console.log(`✅ Total Execution Time: ${(endExtract - startLoad).toFixed(2)}ms`);
-      console.log("Extracted Content Length:", content?.length || 0);
-    })()
+  async function handleRestore(type: "progress" | "books" | "watchlist") {
+    console.log(`Restoring ${type}...`);
+    const data = await restoreFromGitHub(type);
+    setRestoredData({ [type]: data });
+    console.log(`Restored ${type}:`, data);
   }
 
+  async function addGitCredentials() {
+    addCredentials(
+      "raj248",
+      "backup",
+      "master",
+      "YOUR_TOKEN_HERE"
+    )
+    console.log("Git credentials added.");
+    const creds = useGitHubStore.getState().owner + " " + useGitHubStore.getState().repo + " " + useGitHubStore.getState().branch + " " + useGitHubStore.getState().token;
+    console.log(creds);
 
-  function OnPressScan() {
-    (async () => {
-      ScanFiles()
-        .then((res) => { console.log(res) });
-    })()
-  }
-  function clear() {
-    console.log("clearing")
-    InteractionManager.runAfterInteractions(() => {
-      // Object.keys(books).map((id) => useBookStore.getState().removeBook(id))
-      // Object.keys(watchers).map((id) => useWatcherStore.getState().removeWatcher(id))
-      debugClear();
-      console.log("cleared")
-    });
+    setCredentials({
+      owner: useGitHubStore.getState().owner,
+      repo: useGitHubStore.getState().repo,
+      branch: useGitHubStore.getState().branch,
+      token: useGitHubStore.getState().token
+    })
   }
   return (
-    <View className='flex-1 justify-center items-center'>
-      <Button onPress={clear} >
+    <ScrollView className="p-4">
+      <Text className="text-xl font-bold">GitHub Backup Debug</Text>
+      <Text>Last Backup: {lastBackup ? new Date(lastBackup).toLocaleString() : "Never"}</Text>
+      <Button className="m-2 p-2 bg-blue-500" onPress={handleBackup}>
+        <Text>Backup Now</Text>
+      </Button>
+
+      <Text className="text-lg mt-4">Restore Data</Text>
+      <Button className="m-2 p-2 bg-green-500" onPress={() => handleRestore("progress")}>
+        <Text>Restore Progress</Text>
+      </Button>
+      <Button className="m-2 p-2 bg-green-500" onPress={() => handleRestore("books")}>
+        <Text>Restore Books</Text>
+      </Button>
+      <Button className="m-2 p-2 bg-green-500" onPress={() => handleRestore("watchlist")}>
+        <Text>Restore Watchlist</Text>
+      </Button>
+
+      <Text className="mt-4">Restored Data:</Text>
+      <Text className="text-xs">{JSON.stringify(restoredData, null, 2)}</Text>
+
+      <Text className="text-lg mt-4">Settings</Text>
+      <Button className="m-2 p-2 bg-purple-500" onPress={() => setAutoBackup(!autoBackup)}>
         <Text>
-          Clear Debug
+          Toggle Auto Backup (Current: {autoBackup ? "On" : "Off"})
         </Text>
       </Button>
-      <Button variant='secondary' className={className_button} onPress={onPressDebug}>
-        <Text>Debug Images</Text>
+      <Button className="m-2 p-2 bg-purple-500" onPress={() => setEncryption(!useEncryption)}>
+        <Text>
+          Toggle Encryption (Current: {useEncryption ? "On" : "Off"})
+        </Text>
       </Button>
-      <Button variant='primary' className={className_button} onPress={onPressEpubCore}>
-        <Text>Epub Core</Text>
+
+      <Button className="m-2 p-2 bg-yellow-500" onPress={checkOrCreateIndexRepo}>
+        <Text>Check or create repo</Text>
       </Button>
-      <Button variant='tonal' onPress={OnPressScan}>
-        <Text>Scan Files</Text>
+      <Button onPress={addGitCredentials}>
+        <Text>
+          Add Git Credentials
+        </Text>
       </Button>
-    </View>
+      <Text>
+        {credentials.owner} {credentials.repo} {credentials.branch} {credentials.token}
+      </Text>
+
+      <Text>{process.env.GITHUB_TOKEN}</Text>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  codeHighlightContainer: {
-    borderRadius: 3,
-    paddingHorizontal: 4,
-  },
-  getStartedContainer: {
-    alignItems: 'center',
-    marginHorizontal: 50,
-  },
-  getStartedText: {
-    fontSize: 17,
-    lineHeight: 24,
-    textAlign: 'center',
-  },
-  helpContainer: {
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginTop: 15,
-  },
-  helpLink: {
-    paddingVertical: 15,
-  },
-  helpLinkText: {
-    textAlign: 'center',
-  },
-  homeScreenFilename: {
-    marginVertical: 7,
-  },
-});

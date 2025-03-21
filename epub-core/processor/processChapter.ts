@@ -25,7 +25,8 @@ export async function processChapter(zipPath: string, path: string): Promise<str
 
     // Rewrite images in HTML
     let processedHtml = await extractAndRewriteImages(chapter, resources);
-
+    console.log("Processed HTML:", processedHtml);
+    
     // Inject custom CSS
     processedHtml = injectStyles(processedHtml);
 
