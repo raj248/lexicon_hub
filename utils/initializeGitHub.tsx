@@ -9,9 +9,9 @@ const INDEX_REPO = "books-backup-index";
 const BASE_URL = `https://api.github.com/repos/${GITHUB_USERNAME}/${INDEX_REPO}`;
 
 const HEADERS = {
-  "Authorization": `token ${token}`,
-  "Accept": "application/vnd.github.v3+json",
-  "Content-Type": "application/json"
+  Authorization: `token ${token}`,
+  Accept: "application/vnd.github.v3+json",
+  // "Content-Type": "application/json"
 };
 
 export async function checkOrCreateIndexRepo() {
