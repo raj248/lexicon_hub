@@ -139,6 +139,11 @@ export default function ReaderScreen() {
           key={webViewKey}
           androidLayerType="hardware"
           originWhitelist={['*']}
+          allowUniversalAccessFromFileURLs={true}
+          allowFileAccess={true}
+          allowFileAccessFromFileURLs={true}
+          domStorageEnabled={true}
+          startInLoadingState={true}
           source={{ html: content }}
           injectedJavaScript={injectedJS + `window.scrollTo(0, ${(initialScroll.current / 100)} * document.body.scrollHeight);`}
           // injectedJavaScriptBeforeContentLoaded={injectedJS}

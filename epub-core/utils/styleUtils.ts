@@ -33,6 +33,25 @@ export function injectStyles(htmlContent: string): string {
         max-width: 100%;
         margin: 10px auto;
       }
+      .page-break {
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block;
+        line-height: 1;
+      }
+      .svg_outer {
+        margin: 0;
+        padding: 0;
+      }
+      svg {
+        display: block;
+        max-width: 100%;
+        margin: 10px auto;
+        overflow: hidden;
+        width: 100%;
+        height: auto;
+      }
+
     </style></head>`
   );
 }

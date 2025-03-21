@@ -5,7 +5,7 @@ import { readFileFromZip } from "~/modules/FileUtil";
 
 const CACHE_DIR = `${FileSystem.cacheDirectory}epub_resources/`;
 
-export async function processChapter(zipPath: string, path: string): Promise<string | null> {
+export async function processChapter(zipPath: string, path: string, basePath: string): Promise<string | null> {
   try {
     console.log("Path to chapter: ",path)
     const chapter = await readFileFromZip(zipPath, path);
@@ -21,11 +21,10 @@ export async function processChapter(zipPath: string, path: string): Promise<str
     await clearCacheFolder(CACHE_DIR);
 
     // Extract resources and update paths in HTML
-    const resources = await extractResourceBase64(zipPath, chapter);
+    const resources = await extractResourceBase64(zipPath, chapter, basePath);
 
     // Rewrite images in HTML
     let processedHtml = await extractAndRewriteImages(chapter, resources);
-    console.log("Processed HTML:", processedHtml);
     
     // Inject custom CSS
     processedHtml = injectStyles(processedHtml);

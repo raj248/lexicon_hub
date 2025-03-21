@@ -84,7 +84,7 @@ export class EPUBHandler {
   }
   async extractChapter(chapterPath: string) {
     const path = this.basePath + chapterPath;
-    return processChapter(this.zipPath, path);
+    return processChapter(this.zipPath, path, this.basePath);
   }
   async getCoverImage() {
     const pathsToTry: string[] = [
@@ -92,11 +92,13 @@ export class EPUBHandler {
       this.basePath + "Cover.jpg",
       this.basePath + "cover.jpg",
       this.basePath + "Images/Cover.jpg",
-      this.basePath + (this.metadata.coverImage ? this.metadata.coverImage.split("/").pop() : "")
+      this.basePath + (this.metadata.coverImage ? this.metadata.coverImage.split("/").pop() : ""),
+      this.basePath + this.metadata.coverImage,
     ].filter((path) => path.trim().length > 0); // Remove empty strings
   
     for (const path of pathsToTry) {
       try {
+        console.log("Trying path:", path)
         const base64Image = await readFileFromZip(this.zipPath, path, "base64");
         if (base64Image) {
           return `data:image/jpeg;base64,${base64Image}`;
