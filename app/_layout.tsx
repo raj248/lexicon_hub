@@ -41,6 +41,7 @@ export default function RootLayout() {
   const systemColorScheme = Appearance.getColorScheme();
   useEffect(() => {
     const currentTheme = theme === "system" ? systemColorScheme ?? "light" : theme;
+    console.log("Current Theme: ", currentTheme)
     setColorScheme(currentTheme);
   }, [theme])
 

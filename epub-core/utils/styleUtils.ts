@@ -1,8 +1,11 @@
+import { Appearance } from "react-native";
 import { usePreferencesStore } from "~/stores/preferenceStore";
 import {COLORS} from "~/theme/colors"
 export function injectStyles(htmlContent: string): string {
   const preferences = usePreferencesStore.getState()
-  const colors = preferences.theme=="dark"? COLORS.dark:COLORS.light;
+
+  let colors = preferences.theme=="dark"? COLORS.dark:COLORS.light;
+  if(preferences.theme=="system") colors = Appearance.getColorScheme()=="dark"? COLORS.dark:COLORS.light;
   console.log(preferences.theme)
   return htmlContent.replace(
     "</head>",

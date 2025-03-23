@@ -7,6 +7,7 @@ import { SettingsIcon } from '~/components/SettingsIcon';
 import { DebugIcon } from './DebugIcon';
 import Animated, { runOnJS, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Icon } from '@roninoss/icons';
+import { Searchbar } from 'react-native-paper';
 
 interface FloatingHeaderProps {
   title: string;

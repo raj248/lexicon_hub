@@ -130,7 +130,7 @@ export default function ReaderScreen() {
   }, [preferences]);
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+    <View className="flex-1" style={{ backgroundColor: colors.card }}>
       {loading ? (
         <ActivityIndicator size="large" className="flex-1 justify-center" color={preferences.theme} />
       ) : (

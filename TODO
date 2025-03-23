@@ -1,23 +1,27 @@
 NEXT:
+Bookmark system: Allow users to save and jump to specific locations.
+
+fix feat: bookDetailScreen
+
 4️⃣ Cloud Sync & Backup
 GitHub Gist backup integration: Sync progress, bookmarks, and notes.
-Google Drive or Firebase backup: Option for file-based backup.
+Sorting & filtering: By title, author, progress, or custom tags.
+implement feat: preferences
+Default Library Sorting: Alphabetical / Recently Read / Date Added
 
 implement feat: backup
 
 2️⃣ Advanced Reading Features
 
-    Bookmark system: Allow users to save and jump to specific locations.
     Highlighting & annotations: Save highlighted text and user notes.
     Text-to-speech integration: Read aloud functionality for accessibility.
 
 3️⃣ Library & Metadata Improvements
 
+    Google Drive or Firebase backup: Option for file-based backup.
     Book metadata & covers: Fetch and display title, author, and cover.
-    Sorting & filtering: By title, author, progress, or custom tags.
     Search within books: Implement full-text search inside EPUB content.
 
-implement feat: preferences
 implement feat: watching for webnovel updates (web scraping/ crawling)
 
 1. Appearance & Reader Settings
@@ -32,7 +36,6 @@ implement feat: watching for webnovel updates (web scraping/ crawling)
 
 3. Library Management
 
-   Default Library Sorting: Alphabetical / Recently Read / Date Added
    Auto-Sync Library: Toggle (Sync EPUBs automatically)
    Default Storage Location: Internal / External Storage
    Backup Library to Cloud: Manual / Auto-Save (GitHub Gist, Firebase, or Drive)
@@ -82,3 +85,5 @@ Margin, spacing, and text size controls: Improve readability.
 Smooth scrolling & pagination: Improve navigation between chapters.
 
 1️⃣ UI/UX Enhancements
+
+searching books doesn't work

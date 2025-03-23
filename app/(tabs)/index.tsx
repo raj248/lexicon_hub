@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Pressable, InteractionManager } from 'react-native';
 import { Text } from '~/components/nativewindui/Text';
 import { FlatGrid } from 'react-native-super-grid';
@@ -44,11 +44,15 @@ const dummyWatchers = {
 
 export default function LibraryTab() {
   const { books } = useBookStore.getState();
-  const { searchQuery } = useRuntimeStore.getState();
+  const { searchQuery } = useRuntimeStore((state) => ({
+    searchQuery: state.searchQuery,
+  }));
+
   const { colors } = useColorScheme();
   const router = useRouter();
 
   const filteredBookIds = useMemo(() => {
+    console.log("search query: ", searchQuery)
     if (!searchQuery) return Object.keys(books);
     const lowerQuery = searchQuery.toLowerCase();
 
@@ -67,6 +71,10 @@ export default function LibraryTab() {
     });
   };
 
+  useEffect(() => {
+    onRefresh();
+  }, []);
+
   const CoverImage = ({ uri }: { uri?: string }) => {
     const randomBlurhash = (uri) ? null : useMemo(getRandomBlurhash, []); // Ensure a consistent blurhash for each render
     return (
@@ -82,6 +90,7 @@ export default function LibraryTab() {
   return (
     <ScrollView
       className="flex-1 mb-9"
+      style={{ backgroundColor: colors.background }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
