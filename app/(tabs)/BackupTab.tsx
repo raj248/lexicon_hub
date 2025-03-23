@@ -4,6 +4,8 @@ import { Switch } from "react-native-paper";
 import { ActivityIndicator } from "~/components/nativewindui/ActivityIndicator";
 import { Text } from "~/components/nativewindui/Text";
 import { useGitHubStore } from "~/github/githubStore";
+import { useBookStore } from "~/stores/bookStore";
+import { useProgressStore } from "~/stores/progressStore";
 
 export default function BackupSyncTab() {
   const { lastBackup, autoBackup, setAutoBackup, backupNow, restoreFromGitHub } = useGitHubStore();
@@ -12,7 +14,10 @@ export default function BackupSyncTab() {
   const handleBackup = async () => {
     setLoading(true);
 
-    await backupNow({}, {}, {});
+    const books = useBookStore.getState().books;
+    const progress = useProgressStore.getState().progress;
+
+    await backupNow(progress, books, {});
     setLoading(false);
   };
 

@@ -6,10 +6,12 @@ import { useGitHubStore } from "~/github/githubStore";
 import { checkOrCreateIndexRepo } from "~/github/initializeGitHub";
 import { useBookStore } from "~/stores/bookStore";
 import { Button as NativeButton } from "./Button";
+import { useProgressStore } from "~/stores/progressStore";
 
 export function DebugContent() {
   const { addCredentials, backupNow, restoreFromGitHub, lastBackup, setAutoBackup, setEncryption, autoBackup, useEncryption } = useGitHubStore();
   const [restoredData, setRestoredData] = useState<any>(null);
+  const [size, setSize] = useState<number>(0);
   const [credentials, setCredentials] = useState({
     owner: "",
     repo: "",
@@ -20,7 +22,9 @@ export function DebugContent() {
   async function handleBackup() {
     console.log("Starting backup...");
     const books = useBookStore.getState().books;
-    await backupNow({ progress: "Sample Progress" }, books, { watchlist: "Sample Watchlist" });
+    const progress = useProgressStore.getState().progress;
+
+    await backupNow(progress, books, {});
     console.log("Backup completed.");
   }
 
@@ -35,8 +39,6 @@ export function DebugContent() {
 
       }
     }
-    // return JSON.stringify(books);
-
   }
 
   async function handleRestore(type: "progress" | "books" | "watchlist") {
@@ -65,9 +67,25 @@ export function DebugContent() {
       token: useGitHubStore.getState().token
     })
   }
+
+  async function getRepoSize() {
+    const size = await useGitHubStore.getState().getSize().catch(console.error);
+    const repo = await useGitHubStore.getState().getRepo().catch(console.error);
+    size ? setSize(size) : console.log("no size")
+    console.log("Repo size:", size);
+    setRestoredData(repo)
+  }
+
+  async function getBackupIndex() {
+    const index = await useGitHubStore.getState().getIndex().catch(console.error);
+    console.log("Backup index:", index);
+  }
   return (
     <ScrollView className="p-4">
       <NativeButton title="Clear Debug" onPress={useBookStore.getState().debugClear} />
+      <NativeButton title="Get Repo Size" onPress={getRepoSize} className="mt-4" />
+      <NativeButton title="Get Index" onPress={getBackupIndex} className="mt-4" />
+      <Text>{size}</Text>
       <Text className="text-xl font-bold">GitHub Backup Debug</Text>
       <Text>Last Backup: {lastBackup ? new Date(lastBackup).toLocaleString() : "Never"}</Text>
       <Button className="m-2 p-2 bg-blue-500" onPress={handleBackup}>
@@ -115,8 +133,6 @@ export function DebugContent() {
       <Text>
         {credentials.owner} {credentials.repo} {credentials.branch} {credentials.token}
       </Text>
-
-      <Text>{process.env.GITHUB_TOKEN}</Text>
     </ScrollView>
   );
 }

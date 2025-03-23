@@ -1,4 +1,5 @@
 NEXT:
+Add git credential ui
 Bookmark system: Allow users to save and jump to specific locations.
 
 fix feat: bookDetailScreen

@@ -15,6 +15,8 @@ type ProgressStore = {
   progress: Record<string, ProgressData>; // Store progress by book ID
   setProgress: (id: string, data: Partial<ProgressData>) => void;
   getProgress: (id: string) => ProgressData | undefined;
+
+  populateProgress: (data: ProgressData[]) => void;
 };
 
 export const useProgressStore = create<ProgressStore>()(
@@ -31,6 +33,16 @@ export const useProgressStore = create<ProgressStore>()(
         })),
 
       getProgress: (id) => get().progress[id],
+      populateProgress: (data: ProgressData[]) => {
+        set((state) => ({
+          progress: {
+            ...state.progress, // Keep existing progress
+            ...Object.fromEntries(data.map((item) => [item.id, item])), // Convert array to object
+          },
+        }));
+      }
+
+
     }),
     {
       name: "progress-store",

@@ -88,7 +88,7 @@ export default function ReaderScreen() {
         const progress = useProgressStore.getState().getProgress(bookId);
         if (progress) {
           if (progress.chapter !== index) {
-            useProgressStore.getState().setProgress(bookId, { readProgress: 0, chapter: index });
+            useProgressStore.getState().setProgress(bookId, { id: bookId, readProgress: 0, chapter: index });
             initialScroll.current = 0;
           }
           // initialScroll.current = progress?.readProgress || 0;
@@ -106,7 +106,7 @@ export default function ReaderScreen() {
       toggleHeader();
     } else {
       const data = JSON.parse(event.nativeEvent.data);
-      useProgressStore.getState().setProgress(bookId, { readProgress: data.value, chapter: index });
+      useProgressStore.getState().setProgress(bookId, { id: bookId, readProgress: data.value, chapter: index });
     }
   };
   // Re-render WebView when theme or fontSize changes
@@ -119,7 +119,7 @@ export default function ReaderScreen() {
         const progress = useProgressStore.getState().getProgress(bookId);
         if (progress) {
           if (progress.chapter !== index) {
-            useProgressStore.getState().setProgress(bookId, { readProgress: 0, chapter: index });
+            useProgressStore.getState().setProgress(bookId, { id: bookId, readProgress: 0, chapter: index });
             initialScroll.current = 0;
           }
           // initialScroll.current = progress?.readProgress || 0;

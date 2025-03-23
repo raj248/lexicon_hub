@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { backupAll, restoreData } from "./githubService";
+import { backupAll, getBackupIndex, getBackupRepo, getRepoSize, restoreData } from "./githubService";
 
 interface GitHubStore {
   owner: string;
@@ -19,6 +19,10 @@ interface GitHubStore {
 
   backupNow: (progress: any, books: any, watchlist: any) => Promise<void>;
   restoreFromGitHub: (type: "progress" | "books" | "watchlist") => Promise<any>;
+
+  getSize: () => Promise<number | null>;
+  getRepo: () => Promise<string>;
+  getIndex: () => Promise<any>;
 }
 
 export const useGitHubStore = create<GitHubStore>()(
@@ -49,6 +53,18 @@ export const useGitHubStore = create<GitHubStore>()(
       restoreFromGitHub: async (type) => {
         const { owner, repo, branch, token } = get();
         return await restoreData(owner, repo, branch, token, type);
+      },
+      getSize: async () => {
+        const { owner, repo, branch, token } = get();
+        return await getRepoSize(owner, repo, token);
+      },
+      getRepo: async () => {
+        const { owner, repo, branch, token } = get();
+        return await getBackupRepo(owner, token);
+      },
+      getIndex: async () => {
+        const { owner, repo, branch, token } = get();
+        return await getBackupIndex(owner, token);
       },
     }),
     {
