@@ -26,7 +26,7 @@ export default async function scanAndAddBooks() {
     const existingBooks = useBookStore.getState().books; // Fetch existing books
     const existingPaths = new Set(Object.values(existingBooks).map(book => book.path)); // Store paths for quick lookup
 
-    const batchSize = 2;
+    const batchSize = 20;
     let batch = [];
     const epub = new EPUBHandler();
 
@@ -58,7 +58,7 @@ export default async function scanAndAddBooks() {
         path: bookPath,
         addedAt: Date.now(),
         id,
-        chapters: toc,
+        // chapters: toc,
       };
       batch.push(newBook);
 

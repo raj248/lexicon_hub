@@ -23,7 +23,7 @@ export async function readFileFromZip(filePath: string, fileName: string, type: 
 
 export async function saveCoverImage(base64String: string, title: string): Promise<string> {
   const filename = title.replace(/\s+/g, "_") + ".jpg"; // Sanitize filename
-  const path = `${FileSystem.cacheDirectory}${filename}`;
+  const path = `${FileSystem.documentDirectory}${filename}`;
 
   const base64Data = base64String.replace(/^data:image\/\w+;base64,/, "");
 
@@ -39,10 +39,17 @@ export async function saveCoverImage(base64String: string, title: string): Promi
     const resized = await context.renderAsync();
     const image = await resized.saveAsync({
       compress: 0.1,
+      base64: true,
       format: SaveFormat.JPEG, // Compress image
     });
+    if(image.base64)
+    await FileSystem.writeAsStringAsync(path, image.base64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
 
-    return image.uri; // Return file URI for loading in <Image />
+    console.log("Cover image saved:", path);
+
+    return path; // Return file URI for loading in <Image />
   } catch (error) {
     console.error("Error processing cover image:", error);
     return "";

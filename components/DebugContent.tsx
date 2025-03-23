@@ -3,7 +3,9 @@ import { View, ScrollView } from "react-native";
 import { Text } from "./nativewindui/Text";
 import { Button } from "./nativewindui/Button";
 import { useGitHubStore } from "~/github/githubStore";
-import { checkOrCreateIndexRepo } from "~/utils/initializeGitHub";
+import { checkOrCreateIndexRepo } from "~/github/initializeGitHub";
+import { useBookStore } from "~/stores/bookStore";
+import { Button as NativeButton } from "./Button";
 
 export function DebugContent() {
   const { addCredentials, backupNow, restoreFromGitHub, lastBackup, setAutoBackup, setEncryption, autoBackup, useEncryption } = useGitHubStore();
@@ -17,21 +19,38 @@ export function DebugContent() {
 
   async function handleBackup() {
     console.log("Starting backup...");
-    await backupNow({ progress: "Sample Progress" }, { books: "Sample Books" }, { watchlist: "Sample Watchlist" });
+    const books = useBookStore.getState().books;
+    await backupNow({ progress: "Sample Progress" }, books, { watchlist: "Sample Watchlist" });
     console.log("Backup completed.");
+  }
+
+  async function jsonBooks() {
+    console.log("Books in json stringify...");
+    const books = useBookStore.getState().books;
+    for (const id in books) {
+      if (Object.prototype.hasOwnProperty.call(books, id)) {
+        const book = books[id];
+        console.info(`Book : ${id}`);
+        console.log(JSON.stringify(book));
+
+      }
+    }
+    // return JSON.stringify(books);
+
   }
 
   async function handleRestore(type: "progress" | "books" | "watchlist") {
     console.log(`Restoring ${type}...`);
     const data = await restoreFromGitHub(type);
     setRestoredData({ [type]: data });
-    console.log(`Restored ${type}:`, data);
+    // console.log(`Restored ${type}:`, data);
+    console.log("Restore completed.")
   }
 
   async function addGitCredentials() {
     addCredentials(
       "raj248",
-      "backup",
+      "books-backup-index",
       "master",
       "YOUR_TOKEN_HERE"
     )
@@ -48,10 +67,15 @@ export function DebugContent() {
   }
   return (
     <ScrollView className="p-4">
+      <NativeButton title="Clear Debug" onPress={useBookStore.getState().debugClear} />
       <Text className="text-xl font-bold">GitHub Backup Debug</Text>
       <Text>Last Backup: {lastBackup ? new Date(lastBackup).toLocaleString() : "Never"}</Text>
       <Button className="m-2 p-2 bg-blue-500" onPress={handleBackup}>
         <Text>Backup Now</Text>
+      </Button>
+
+      <Button className="m-2 p-2 bg-pink-500" onPress={jsonBooks}>
+        <Text>books JSON</Text>
       </Button>
 
       <Text className="text-lg mt-4">Restore Data</Text>

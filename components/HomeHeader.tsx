@@ -48,6 +48,7 @@ export function FloatingHeader({ title, showSearchBar = true, showSettingsIcon =
     });
     setInputValue('');
     Keyboard.dismiss();
+    // setSearchVisible(false);
   };
 
   return (
@@ -67,6 +68,15 @@ export function FloatingHeader({ title, showSearchBar = true, showSettingsIcon =
                 autoFocus={searchVisible}
                 onBlur={closeSearch}
               />
+              // <Searchbar
+              //   placeholder={`Search ${title}...`}
+              //   placeholderTextColor={colors.foreground}
+              //   value={inputValue}
+              //   onChangeText={setInputValue}
+              //   autoFocus={searchVisible}
+              //   onBlur={closeSearch}
+              // />
+
             ) : null}
           </Animated.View>
 
@@ -77,9 +87,10 @@ export function FloatingHeader({ title, showSearchBar = true, showSettingsIcon =
                 <Icon name="magnify" color={colors.foreground} />
               </Pressable>
             )}
-            {showSettingsIcon && <SettingsIcon />}
 
+            {showSettingsIcon && <SettingsIcon />}
             <DebugIcon />
+
           </View>
         </View>
       </Pressable>

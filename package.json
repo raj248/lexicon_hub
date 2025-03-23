@@ -27,6 +27,7 @@
     "@rn-primitives/slot": "^1.1.0",
     "@roninoss/icons": "^0.0.4",
     "@shopify/flash-list": "1.7.3",
+    "base-64": "^1.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "expo": "~52.0.38",
@@ -69,6 +70,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/base-64": "^1.0.2",
     "@types/react": "~18.3.12",
     "@typescript-eslint/eslint-plugin": "^7.7.0",
     "@typescript-eslint/parser": "^7.7.0",

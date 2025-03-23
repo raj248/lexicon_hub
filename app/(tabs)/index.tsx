@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Pressable, InteractionManager } from 'react-native';
 import { Text } from '~/components/nativewindui/Text';
 import { FlatGrid } from 'react-native-super-grid';
@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 import Animated, { BounceOut, Easing, FadeInUp, LinearTransition } from "react-native-reanimated";
 import { RefreshControl, ScrollView } from 'react-native-gesture-handler';
 import scanAndAddBooks from '~/utils/scanAndAddBooks';
-import { useBookStore } from '~/stores/bookStore';
+import { Book, useBookStore } from '~/stores/bookStore';
 import { getRandomBlurhash } from '~/utils/blurhash';
 
 const dummyWatchers = {
@@ -97,9 +97,9 @@ export default function LibraryTab() {
     >
       <View className="p-4 mb-4">
 
-        <FlatGrid
+        {filteredBookIds.length > 0 ? (<FlatGrid
           scrollEnabled={false}
-          data={filteredBookIds.map((id) => books[id])}
+          data={filteredBookIds.map(id => books[id])}
           itemDimension={120}
           windowSize={11}
           maxToRenderPerBatch={15} // Reduce number of items rendered at once
@@ -113,10 +113,6 @@ export default function LibraryTab() {
                 .delay(500)
                 .duration(500)
                 .easing(Easing.sin)}
-            // exiting={BounceOut
-            //   .delay(200)
-            //   .duration(300)
-            //   .easing(Easing.inOut(Easing.elastic(2)))}
             >
               <Pressable
                 className="p-2 rounded-lg"
@@ -131,7 +127,11 @@ export default function LibraryTab() {
               </Pressable>
             </Animated.View>
           )}
-        />
+        />) : (
+          <View className="flex-1 justify-center items-center">
+            <Text>No books found.</Text>
+          </View>
+        )}
       </View>
     </ScrollView>
   );

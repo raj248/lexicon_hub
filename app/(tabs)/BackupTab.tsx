@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { View, ScrollView, TouchableOpacity } from "react-native";
+import { Switch } from "react-native-paper";
 import { ActivityIndicator } from "~/components/nativewindui/ActivityIndicator";
 import { Text } from "~/components/nativewindui/Text";
-import { Toggle } from "~/components/nativewindui/Toggle";
 import { useGitHubStore } from "~/github/githubStore";
 
 export default function BackupSyncTab() {
@@ -18,12 +18,13 @@ export default function BackupSyncTab() {
 
   const handleRestore = async () => {
     setLoading(true);
-    await restoreFromGitHub();
+    const data = await restoreFromGitHub("progress");
+    console.log(data);
     setLoading(false);
   };
 
   return (
-    <View className="flex-1 p-4 bg-white">
+    <View className="flex-1 p-4">
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <TouchableOpacity
           className="bg-blue-600 p-4 rounded-lg items-center mb-4"
@@ -41,12 +42,12 @@ export default function BackupSyncTab() {
           {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-semibold">Restore Backup</Text>}
         </TouchableOpacity>
 
-        <View className="flex-row justify-between items-center p-4 bg-gray-100 rounded-lg mb-4">
+        <View className="flex-row justify-between items-center p-4 rounded-lg mb-4">
           <Text className="font-semibold">Enable Auto Backup</Text>
-          <Toggle value={autoBackup} onValueChange={setAutoBackup} />
+          <Switch value={autoBackup} onValueChange={setAutoBackup} />
         </View>
 
-        <View className="p-4 bg-gray-100 rounded-lg mb-4">
+        <View className="p-4 rounded-lg mb-4">
           <Text className="font-semibold">Last Backup:</Text>
           <Text>{lastBackup ? new Date(lastBackup).toLocaleString() : "Never"}</Text>
         </View>
