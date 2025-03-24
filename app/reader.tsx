@@ -11,7 +11,7 @@ import { injectedJS } from "~/utils/jsInjection";
 import { useProgressStore } from "~/stores/progressStore";
 import { usePreferencesStore } from "~/stores/preferenceStore";
 import { useColorScheme } from "~/lib/useColorScheme";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from "react-native-reanimated";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS } from "react-native-reanimated";
 
 const { width } = Dimensions.get("window");
 
@@ -96,6 +96,7 @@ export default function ReaderScreen() {
         const progress = useProgressStore.getState().getProgress(bookId);
         if (progress) {
           if (progress.chapter !== index) {
+            console.log("Updating Progress after chapter change")
             useProgressStore.getState().setProgress(bookId, { id: bookId, readProgress: 0, chapter: index });
             initialScroll.current = 0;
           }
@@ -108,20 +109,29 @@ export default function ReaderScreen() {
   }, [index]);
 
 
+  const resetTranslation = () => {
+    setTimeout(() => {
+      translateX.value = 0;
+      setLoading(false);
+    }, 100); // Delay before making WebView visible again
+  };
+
+
   const onMessage = (event: any) => {
     console.log(event.nativeEvent.data)
     if (event.nativeEvent.data === "toggleHeader") {
       toggleHeader();
     }
     else if (event.nativeEvent.data === "prev") {
+
       translateX.value = withTiming(width, { duration: 300, easing: Easing.out(Easing.cubic) }, () => {
-        translateX.value = 0;
+        runOnJS(resetTranslation)();
       });
       setIndex(index - 1)
     }
     else if (event.nativeEvent.data === "next") {
       translateX.value = withTiming(-width, { duration: 300, easing: Easing.out(Easing.cubic) }, () => {
-        translateX.value = 0;
+        runOnJS(resetTranslation)();
       });
       setIndex(index + 1)
     }
@@ -151,37 +161,52 @@ export default function ReaderScreen() {
   }, [preferences]);
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.card }}>
-      <Animated.View style={[{ flex: 1 }, animatedStyle]}>
-
-        <WebView
-          ref={webViewRef}
-          key={webViewKey}
-          androidLayerType="hardware"
-          originWhitelist={['*']}
-          allowUniversalAccessFromFileURLs={true}
-          allowFileAccess={true}
-          allowFileAccessFromFileURLs={true}
-          domStorageEnabled={true}
-          startInLoadingState={true}
-          source={{ html: content }}
-          injectedJavaScript={injectedJS + `window.scrollTo(0, ${(initialScroll.current / 100)} * document.body.scrollHeight);`}
-          // injectedJavaScriptBeforeContentLoaded={injectedJS}
-          style={{ flex: 1, backgroundColor: colors.background }}
-          onMessage={onMessage}
-          onLoadEnd={() => {
-            console.log("Webview loaded");
-          }}
-          onLoadProgress={({ nativeEvent }) => {
-            console.log("Webview loading progress: ", nativeEvent.progress);
-          }}
-          onLoadStart={() => {
-            console.log("Webview loading started");
-          }}
-
-        />
-      </Animated.View>
-
+    <View className="flex-1" style={{ backgroundColor: colors.background }}>
+      {!loading && (
+        <Animated.View style={[{ flex: 1, backgroundColor: colors.background }, animatedStyle]}>
+          <WebView
+            ref={webViewRef}
+            key={webViewKey}
+            androidLayerType="hardware"
+            originWhitelist={['*']}
+            allowUniversalAccessFromFileURLs={true}
+            allowFileAccess={true}
+            allowFileAccessFromFileURLs={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            renderLoading={() => (
+              <View
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: colors.background,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <ActivityIndicator size="large" color="white" />
+              </View>
+            )}
+            source={{ html: content }}
+            injectedJavaScript={injectedJS + `window.scrollTo(0, ${(initialScroll.current / 100)} * document.body.scrollHeight);`}
+            // injectedJavaScriptBeforeContentLoaded={injectedJS}
+            style={{ flex: 1, backgroundColor: colors.background }}
+            onMessage={onMessage}
+            onLoadEnd={() => {
+              console.log("Webview loaded");
+            }}
+            onLoadProgress={({ nativeEvent }) => {
+              console.log("Webview loading progress: ", nativeEvent.progress);
+            }}
+            onLoadStart={() => {
+              console.log("Webview loading started");
+            }}
+          />
+        </Animated.View>
+      )}
 
       <FloatingHeader
         toggleChapterList={toggleChapterList}
