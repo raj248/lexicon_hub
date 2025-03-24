@@ -5,6 +5,8 @@ import { Text } from "~/components/nativewindui/Text";
 import { useBookStore, Category } from "~/stores/bookStore";
 import { useWatcherStore } from "~/stores/watcherStore";
 import * as Linking from "expo-linking";
+import { Button } from "react-native-paper";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 
 
@@ -14,6 +16,7 @@ export default function DiscoverTab() {
   const { books, addBook } = useBookStore();
   const { watchers } = useWatcherStore();
   const [refreshing, setRefreshing] = useState(false);
+  const { colors } = useColorScheme();
 
 
   // Refresh function (Trigger web scraping)
@@ -39,11 +42,6 @@ export default function DiscoverTab() {
         data={watchlist}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListEmptyComponent={
-          <View className="flex-1 justify-center items-center">
-            <Text className="">No Books To See. Contact The Devs To Add The Feature!</Text>
-          </View>
-        }
         renderItem={({ item }) => (
           <View className="p-4 mb-4 rounded-lg">
             {/* Book Info */}
@@ -72,6 +70,13 @@ export default function DiscoverTab() {
           </View>
         )}
       />
+      {watchlist.length == 0 && (
+        <View className='flex-1 justify-center items-center'>
+          <Button icon="magnify" mode="elevated" className="mr-4 mt-[300]" rippleColor={colors.primary} onPress={() => console.log('Pressed')}>
+            Search
+          </Button>
+        </View>
+      )}
     </View>
   );
 }

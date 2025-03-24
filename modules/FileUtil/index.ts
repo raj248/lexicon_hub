@@ -1,6 +1,7 @@
 import FileUtilModule from './src/FileUtilModule';
 import { SaveFormat, ImageManipulator } from "expo-image-manipulator";
 import * as FileSystem from "expo-file-system";
+import { PermissionsAndroid, Platform } from "react-native";
 
 export async function ScanFiles(): Promise<string[]> {
   return await FileUtilModule.ScanFiles();
@@ -54,4 +55,12 @@ export async function saveCoverImage(base64String: string, title: string): Promi
     console.error("Error processing cover image:", error);
     return "";
   }
+}
+
+export async function checkFilePermission(): Promise<boolean> {
+    if (Platform.OS === "android") {
+      const granted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
+      return granted;
+    }
+    return true; // iOS does not require explicit permission for file access
 }

@@ -30,8 +30,6 @@ export default function RootLayout() {
   useEffect(() => {
     NavigationBar.setVisibilityAsync('hidden'); // ✅ Hide navigation bar
     NavigationBar.setBehaviorAsync('overlay-swipe'); // ✅ Show only when swiped
-    // EpubKit.requestStoragePermission()
-    FileUtil.RequestStoragePermission()
   }, []);
   useInitialAndroidBarSync();
 
