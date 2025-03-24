@@ -104,7 +104,12 @@ export default function ReaderScreen() {
     console.log(event.nativeEvent.data)
     if (event.nativeEvent.data === "toggleHeader") {
       toggleHeader();
-    } else {
+    } else if (event.nativeEvent.data === "prev") {
+      // console.log(event.nativeEvent.data)
+    } else if (event.nativeEvent.data === "next") {
+      // console.log(event.nativeEvent.data)
+    }
+    else {
       const data = JSON.parse(event.nativeEvent.data);
       useProgressStore.getState().setProgress(bookId, { id: bookId, readProgress: data.value, chapter: index });
     }
