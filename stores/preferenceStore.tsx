@@ -22,7 +22,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
   persist(
     (set, get) => ({
       theme: "system",
-      fontSize: 16,
+      fontSize: 36,
       margin: 16,
       lineSpacing: "normal",
       orientation: "auto",

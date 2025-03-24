@@ -1,5 +1,5 @@
 import Animated, { SlideInDown, FadeOut, SlideInUp, SlideOutDown, SlideOutUp } from "react-native-reanimated";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, ScrollView, TouchableOpacity } from "react-native";
 import { Button, Switch, TextInput } from "react-native-paper";
 import { ActivityIndicator } from "~/components/nativewindui/ActivityIndicator";
@@ -8,6 +8,7 @@ import { useGitHubStore } from "~/github/githubStore";
 import { useBookStore } from "~/stores/bookStore";
 import { useProgressStore } from "~/stores/progressStore";
 import { Dimensions } from "react-native";
+import Toast from "react-native-toast-message";
 export default function BackupSyncTab() {
   const {
     owner,
@@ -28,6 +29,14 @@ export default function BackupSyncTab() {
   const [tokenConfig, setTokenConfig] = useState("");
 
   const { width, height } = Dimensions.get("window");
+
+  useEffect(() => {
+    Toast.show({
+      type: "info",
+      text1: "Auto Backup Method Not Implemented",
+      text2: "Contact Developer for the Feature",
+    })
+  }, [autoBackup])
 
   const handleBackup = async () => {
     setLoading(true);

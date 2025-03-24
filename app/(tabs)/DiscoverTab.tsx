@@ -7,6 +7,7 @@ import { useWatcherStore } from "~/stores/watcherStore";
 import * as Linking from "expo-linking";
 import { Button } from "react-native-paper";
 import { useColorScheme } from "~/lib/useColorScheme";
+import Toast from "react-native-toast-message";
 
 
 
@@ -36,8 +37,23 @@ export default function DiscoverTab() {
   // Sort by latest update timestamp
   watchlist.sort((a, b) => (b.latestUpdate?.releaseDate || 0) - (a.latestUpdate?.releaseDate || 0));
 
+  const handleSearch = async () => {
+    Toast.show({
+      type: "info",
+      text1: "Method Not Implemented",
+      text2: "Contact Developer for the Feature",
+    })
+  }
   return (
     <View className="flex-1 p-4 ">
+      {watchlist.length === 0 && (
+        <View className='flex-1 justify-center items-center'>
+          <Button icon="magnify" mode="elevated" className="mr-4 mt-[300]" rippleColor={colors.primary} onPress={handleSearch}>
+            Search
+          </Button>
+        </View>
+      )}
+
       <FlatList
         data={watchlist}
         keyExtractor={(item) => item.id}
@@ -70,13 +86,6 @@ export default function DiscoverTab() {
           </View>
         )}
       />
-      {watchlist.length == 0 && (
-        <View className='flex-1 justify-center items-center'>
-          <Button icon="magnify" mode="elevated" className="mr-4 mt-[300]" rippleColor={colors.primary} onPress={() => console.log('Pressed')}>
-            Search
-          </Button>
-        </View>
-      )}
     </View>
   );
 }

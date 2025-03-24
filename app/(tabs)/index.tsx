@@ -97,6 +97,13 @@ export default function LibraryTab() {
       }
     >
       <View className="flex-1 p-4 mb-4">
+        {/* {filteredBookIds.length === 0 && (
+          <View className='flex-1 justify-center items-center'>
+            <Button icon="magnify" mode="elevated" className="mr-4 mt-[300]" rippleColor={colors.primary} onPress={() => console.log('Pressed')}>
+              Search
+            </Button>
+          </View>
+        )} */}
         <FlatGrid
           scrollEnabled={false}
           data={filteredBookIds.map(id => books[id])}

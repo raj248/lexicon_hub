@@ -131,6 +131,7 @@ export function DebugContent() {
       <Text>
         {credentials.owner} {credentials.repo} {credentials.branch}
       </Text>
+      <View className="mt-8" />
     </ScrollView>
   );
 }
