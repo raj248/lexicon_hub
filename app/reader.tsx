@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { ActivityIndicator, StatusBar, View } from "react-native";
+import { ActivityIndicator, Dimensions, StatusBar, View } from "react-native";
 import { useNavigation, useLocalSearchParams } from "expo-router";
 import { WebView } from "react-native-webview";
 
@@ -11,6 +11,10 @@ import { injectedJS } from "~/utils/jsInjection";
 import { useProgressStore } from "~/stores/progressStore";
 import { usePreferencesStore } from "~/stores/preferenceStore";
 import { useColorScheme } from "~/lib/useColorScheme";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from "react-native-reanimated";
+
+const { width } = Dimensions.get("window");
+
 
 export default function ReaderScreen() {
   const navigation = useNavigation();
@@ -32,7 +36,11 @@ export default function ReaderScreen() {
 
   let initialScroll = useRef(0);
 
+  const translateX = useSharedValue(0);
 
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
   /** Toggle Header & Chapter List */
   const toggleHeader = () => {
@@ -104,10 +112,18 @@ export default function ReaderScreen() {
     console.log(event.nativeEvent.data)
     if (event.nativeEvent.data === "toggleHeader") {
       toggleHeader();
-    } else if (event.nativeEvent.data === "prev") {
-      // console.log(event.nativeEvent.data)
-    } else if (event.nativeEvent.data === "next") {
-      // console.log(event.nativeEvent.data)
+    }
+    else if (event.nativeEvent.data === "prev") {
+      translateX.value = withTiming(width, { duration: 300, easing: Easing.out(Easing.cubic) }, () => {
+        translateX.value = 0;
+      });
+      setIndex(index - 1)
+    }
+    else if (event.nativeEvent.data === "next") {
+      translateX.value = withTiming(-width, { duration: 300, easing: Easing.out(Easing.cubic) }, () => {
+        translateX.value = 0;
+      });
+      setIndex(index + 1)
     }
     else {
       const data = JSON.parse(event.nativeEvent.data);
@@ -136,9 +152,8 @@ export default function ReaderScreen() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.card }}>
-      {loading ? (
-        <ActivityIndicator size="large" className="flex-1 justify-center" color={preferences.theme} />
-      ) : (
+      <Animated.View style={[{ flex: 1 }, animatedStyle]}>
+
         <WebView
           ref={webViewRef}
           key={webViewKey}
@@ -165,7 +180,8 @@ export default function ReaderScreen() {
           }}
 
         />
-      )}
+      </Animated.View>
+
 
       <FloatingHeader
         toggleChapterList={toggleChapterList}
