@@ -1,5 +1,4 @@
 NEXT:
-Add git credential ui
 Bookmark system: Allow users to save and jump to specific locations.
 
 fix feat: bookDetailScreen
@@ -88,3 +87,5 @@ Smooth scrolling & pagination: Improve navigation between chapters.
 1️⃣ UI/UX Enhancements
 
 searching books doesn't work
+
+Add git credential ui

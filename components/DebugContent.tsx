@@ -16,7 +16,6 @@ export function DebugContent() {
     owner: "",
     repo: "",
     branch: "",
-    token: ""
   });
 
   async function handleBackup() {
@@ -57,14 +56,13 @@ export function DebugContent() {
       "YOUR_TOKEN_HERE"
     )
     console.log("Git credentials added.");
-    const creds = useGitHubStore.getState().owner + " " + useGitHubStore.getState().repo + " " + useGitHubStore.getState().branch + " " + useGitHubStore.getState().token;
+    const creds = useGitHubStore.getState().owner + " " + useGitHubStore.getState().repo + " " + useGitHubStore.getState().branch;
     console.log(creds);
 
     setCredentials({
       owner: useGitHubStore.getState().owner,
       repo: useGitHubStore.getState().repo,
       branch: useGitHubStore.getState().branch,
-      token: useGitHubStore.getState().token
     })
   }
 
@@ -131,7 +129,7 @@ export function DebugContent() {
         </Text>
       </Button>
       <Text>
-        {credentials.owner} {credentials.repo} {credentials.branch} {credentials.token}
+        {credentials.owner} {credentials.repo} {credentials.branch}
       </Text>
     </ScrollView>
   );

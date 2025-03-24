@@ -1,7 +1,6 @@
 
 import { Book } from "~/stores/bookStore";
 
-
 // import { fetchWithRetry, base64Encode, base64Decode } from "./githubUtils";
 import { fetchWithRetry, base64Encode, base64Decode,utf8ToBase64, base64ToUtf8 } from "./githubUtils";
 import { ProgressData } from "~/stores/progressStore";
@@ -96,6 +95,7 @@ async function fetchData(owner: string, repo: string, token: string, path: strin
     const response = await fetch(`${BASE_URL(owner, repo)}/${path}`, { headers: HEADERS(token) });
     if (!response.ok) {
       if (response.status === 404) {
+        console.log(BASE_URL(owner, repo))
         console.warn(`No backup found for ${path}`);
         return null;
       }

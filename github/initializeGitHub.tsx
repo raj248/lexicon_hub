@@ -1,11 +1,13 @@
 // const GITHUB_USERNAME = "your-username";
 // import { GITHUB_OWNER, GITHUB_REPO, BRANCH, TOKEN } from "@env"
 import { useGitHubStore } from "~/github/githubStore";
+import { getGitHubToken } from "./githubUtils";
 
-const { owner, repo, branch, token } = useGitHubStore.getState();
+const { owner, repo, branch } = useGitHubStore.getState();
+const token = getGitHubToken();
 
 const GITHUB_USERNAME = owner;
-const INDEX_REPO = "books-backup-index";
+const INDEX_REPO = repo;
 const BASE_URL = `https://api.github.com/repos/${GITHUB_USERNAME}/${INDEX_REPO}`;
 
 const HEADERS = {

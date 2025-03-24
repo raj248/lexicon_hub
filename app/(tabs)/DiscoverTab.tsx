@@ -41,7 +41,7 @@ export default function DiscoverTab() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={
           <View className="flex-1 justify-center items-center">
-            <Text className="">No books in watchlist. Add some to track updates!</Text>
+            <Text className="">No Books To See. Contact The Devs To Add The Feature!</Text>
           </View>
         }
         renderItem={({ item }) => (

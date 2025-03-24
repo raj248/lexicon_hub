@@ -55,7 +55,6 @@
     "react-native-cheerio": "^1.0.0-rc.4",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "~2.20.2",
-    "react-native-mmkv": "^3.2.0",
     "react-native-pager-view": "6.5.1",
     "react-native-paper": "^5.13.1",
     "react-native-quick-base64": "^2.1.2",

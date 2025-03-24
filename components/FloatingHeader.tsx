@@ -10,6 +10,7 @@ import Animated, {
 import { router } from "expo-router";
 import { Text } from "./nativewindui/Text";
 import { usePreferencesStore } from "~/stores/preferenceStore";
+import Toast from "react-native-toast-message";
 
 export default function FloatingHeader({
   headerVisibility,
@@ -44,6 +45,14 @@ export default function FloatingHeader({
       setTimeout(() => setSwitching(false), 200); // Allow UI to update
     });
   };
+
+  const handleBookmark = async () => {
+    Toast.show({
+      type: "info",
+      text1: "Method Not Implemented",
+      text2: "Contact Developer for the Feature",
+    })
+  }
 
   useEffect(() => {
     if (!headerVisibility) setHeaderVisibility(true)
@@ -100,7 +109,7 @@ export default function FloatingHeader({
       >
         <View className="flex-col items-center justify-center">
           <Appbar.Action icon="arrow-left" onPress={() => router.back()} color={colors.foreground} />
-          <Appbar.Action icon="bookmark" onPress={() => { }} color={colors.foreground} />
+          <Appbar.Action icon="bookmark" onPress={handleBookmark} color={colors.foreground} />
           <Appbar.Action icon="cog" onPress={() => setSettingsExpanded(!settingsExpanded)} color={colors.foreground} />
           <Appbar.Action icon="file-document-outline" onPress={toggleChapterList} color={colors.foreground} />
         </View>
