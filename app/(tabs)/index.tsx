@@ -11,6 +11,7 @@ import { RefreshControl, ScrollView } from 'react-native-gesture-handler';
 import scanAndAddBooks from '~/utils/scanAndAddBooks';
 import { Book, useBookStore } from '~/stores/bookStore';
 import { getRandomBlurhash } from '~/utils/blurhash';
+import { Button } from 'react-native-paper';
 
 const dummyWatchers = {
   "1": {
@@ -71,9 +72,9 @@ export default function LibraryTab() {
     });
   };
 
-  useEffect(() => {
-    onRefresh();
-  }, []);
+  // useEffect(() => {
+  //   onRefresh();
+  // }, []);
 
   const CoverImage = ({ uri }: { uri?: string }) => {
     const randomBlurhash = (uri) ? null : useMemo(getRandomBlurhash, []); // Ensure a consistent blurhash for each render
@@ -95,9 +96,8 @@ export default function LibraryTab() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <View className="p-4 mb-4">
-
-        {filteredBookIds.length > 0 ? (<FlatGrid
+      <View className="flex-1 p-4 mb-4">
+        <FlatGrid
           scrollEnabled={false}
           data={filteredBookIds.map(id => books[id])}
           itemDimension={120}
@@ -107,6 +107,11 @@ export default function LibraryTab() {
           removeClippedSubviews={true}
           keyExtractor={(item: any) => item.id}
           spacing={10}
+          ListEmptyComponent={
+            <View className="absolute inset-0 justify-center items-center">
+              <Text className="">No Books To See. Contact The Devs To Add The Feature!</Text>
+            </View>
+          }
           renderItem={({ item }: { item: any }) => (
             <Animated.View layout={LinearTransition.springify()}
               entering={FadeInUp
@@ -127,9 +132,12 @@ export default function LibraryTab() {
               </Pressable>
             </Animated.View>
           )}
-        />) : (
-          <View className="flex-1 justify-center items-center">
-            <Text>No books found.</Text>
+        />
+        {filteredBookIds.length === 0 && (
+          <View className='flex-1 justify-center items-center'>
+            <Button icon="magnify" mode="elevated" className="mr-4 mt-[300]" rippleColor={colors.primary} onPress={onRefresh}>
+              Scan
+            </Button>
           </View>
         )}
       </View>
