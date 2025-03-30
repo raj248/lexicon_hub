@@ -27,15 +27,6 @@ export async function extractAndRewriteImages(htmlContent: string, resources: Re
     }
   });
 
-  // $("svg image").each(async (_: any, el: any) => {
-  //   // const src = $(el).attr("href") || "";
-  //   const src = $(el).attr("href");
-  //   if (src) {
-  //     $(el).replaceWith(`<img src="${src}" style="width: 100%"/>`);
-  //   }
-  // })
-  
-  // Replace <img src="...">
   $("img").each((_: any, el: any) => {
     const src = $(el).attr("src");
     if (src && resources[src]) {

@@ -22,6 +22,17 @@ export async function readFileFromZip(filePath: string, fileName: string, type: 
   });
 }
 
+export async function readChapterFromZip(zipPath: string, chapterPath: string) {
+  return await FileUtilModule.readChapterFromZip(zipPath, chapterPath)
+  .then((result) => {
+    return result;
+  })
+  .catch((error) => {
+    console.error("Error reading chapter from zip:", error);
+    return "";
+  });
+}
+
 export async function saveCoverImage(base64String: string, title: string): Promise<string> {
   const filename = title.replace(/\s+/g, "_") + ".jpg"; // Sanitize filename
   const path = `${FileSystem.documentDirectory}${filename}`;
@@ -56,7 +67,6 @@ export async function saveCoverImage(base64String: string, title: string): Promi
     return "";
   }
 }
-
 export async function checkFilePermission(): Promise<boolean> {
     if (Platform.OS === "android") {
       const granted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);

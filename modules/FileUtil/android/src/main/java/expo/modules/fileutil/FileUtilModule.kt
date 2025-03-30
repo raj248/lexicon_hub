@@ -18,6 +18,8 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import android.util.Base64
 import java.io.ByteArrayOutputStream
+import org.jsoup.Jsoup
+
 
 class FileUtilModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -97,6 +99,34 @@ class FileUtilModule : Module() {
           promise.resolve(result)
       } catch (e: Exception) {
           promise.reject("E_READ_FAILED", "Failed to read file from ZIP: ${e.message}", e)
+      }
+    }
+
+    AsyncFunction("readChapterFromZip") {zipPath: String, filePathInZip: String, promise: Promise ->
+      try {
+          val zipFile = ZipFile(zipPath)
+          val entry: ZipEntry? = zipFile.getEntry(filePathInZip)
+
+          if (entry == null) {
+              promise.reject("E_FILE_NOT_FOUND", "File $filePathInZip not found in ZIP.", null)
+              zipFile.close()
+              return@AsyncFunction
+          }
+
+          val inputStream = zipFile.getInputStream(entry)
+          val html = inputStream.bufferedReader().use { it.readText() }
+          zipFile.close()
+
+          // Extract only <body> using Jsoup
+          val document = Jsoup.parse(html)
+          val body = document.body().html()
+
+          // Minify HTML (removes newlines, extra spaces)
+          val minifiedBody = body.replace(Regex("\\s+"), " ").trim()
+
+          promise.resolve(minifiedBody)
+      } catch (e: Exception) {
+        promise.reject("E_READ_FAILED", "Failed to read chapter from ZIP: ${e.message}", e)
       }
     }
   }

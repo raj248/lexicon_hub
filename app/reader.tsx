@@ -100,13 +100,13 @@ export default function ReaderScreen() {
             useProgressStore.getState().setProgress(bookId, { id: bookId, readProgress: 0, chapter: index });
             initialScroll.current = 0;
           }
-          // initialScroll.current = progress?.readProgress || 0;
           console.log("scroll", progress?.readProgress, initialScroll.current)
         }
 
       })
       .finally(() => setLoading(false));
   }, [index]);
+
 
 
   const resetTranslation = () => {
