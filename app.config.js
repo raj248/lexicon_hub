@@ -1,4 +1,4 @@
-{
+export default {
   "expo": {
     "name": "Lexicon Hub",
     "slug": "lexicon_hub",
@@ -48,7 +48,9 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
-      "package": "com.hub.lexicon"
+      "package": "com.hub.lexicon",
+        "targetSdkVersion": 36,
+  "compileSdkVersion": 36
     },
     "extra": {
       "router": {

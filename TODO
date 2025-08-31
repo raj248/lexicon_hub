@@ -91,3 +91,30 @@ Smooth scrolling & pagination: Improve navigation between chapters.
 searching books doesn't work
 
 Add git credential ui
+
+3️⃣ Use WebView’s injectJavaScript Instead of postMessage
+
+Instead of passing full content, let WebView fetch it directly.
+✅ Modify WebView Script
+
+Replace:
+
+document.addEventListener("message", function(event) {
+document.body.innerHTML = event.data;
+});
+
+With:
+
+window.loadChapter = function(html) {
+document.body.innerHTML = html;
+};
+
+Now, in React Native:
+
+webViewRef.current?.injectJavaScript(`window.loadChapter(${JSON.stringify(content)});`);
+
+🔹 Why?
+
+    Faster & less overhead than postMessage
+
+    Avoids string size limitations in postMessage

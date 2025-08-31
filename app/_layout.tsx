@@ -66,6 +66,7 @@ export default function RootLayout() {
                 <Stack.Screen name="debug" options={DEBUG_OPTIONS} />
                 <Stack.Screen name="bookDetails" options={DETAILS_OPTIONS} />
                 <Stack.Screen name='reader' />
+                <Stack.Screen name='viewer' />
               </Stack>
               <Toast />
             </NavThemeProvider>
