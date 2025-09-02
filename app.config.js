@@ -3,6 +3,7 @@ export default {
     name: 'Lexicon Hub',
     slug: 'lexicon_hub',
     version: '1.0.0',
+    runtimeVersion: '1.0.0',
     scheme: 'lexicon-hub',
     web: {
       bundler: 'metro',
@@ -23,7 +24,7 @@ export default {
       typedRoutes: true,
       tsconfigPaths: true,
     },
-    orientation: 'portrait',
+    orientation: 'default',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
     splash: {
@@ -60,9 +61,9 @@ export default {
         projectId: '540a2284-4d1d-412e-bdd9-2f5ab820e321',
       },
     },
-    runtimeVersion: {
-      policy: 'appVersion',
-    },
+    // runtimeVersion: {
+    //   policy: 'appVersion',
+    // },
     updates: {
       url: 'https://u.expo.dev/540a2284-4d1d-412e-bdd9-2f5ab820e321',
     },
