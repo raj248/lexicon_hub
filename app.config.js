@@ -1,71 +1,71 @@
 export default {
-  "expo": {
-    "name": "Lexicon Hub",
-    "slug": "lexicon_hub",
-    "version": "1.0.0",
-    "scheme": "lexicon-hub",
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/favicon.png"
+  expo: {
+    name: 'Lexicon Hub',
+    slug: 'lexicon_hub',
+    version: '1.0.0',
+    scheme: 'lexicon-hub',
+    web: {
+      bundler: 'metro',
+      output: 'static',
+      favicon: './assets/favicon.png',
     },
-    "plugins": [
-      "expo-router",
+    plugins: [
+      'expo-router',
       [
-        "expo-dev-launcher",
+        'expo-dev-launcher',
         {
-          "launchMode": "most-recent"
-        }
+          launchMode: 'most-recent',
+        },
       ],
-      "expo-secure-store"
+      'expo-secure-store',
     ],
-    "experiments": {
-      "typedRoutes": true,
-      "tsconfigPaths": true
+    experiments: {
+      typedRoutes: true,
+      tsconfigPaths: true,
     },
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+    orientation: 'portrait',
+    icon: './assets/icon.png',
+    userInterfaceStyle: 'automatic',
+    splash: {
+      image: './assets/splash.png',
+      resizeMode: 'contain',
+      backgroundColor: '#ffffff',
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.hub.lexicon"
+    assetBundlePatterns: ['**/*'],
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: 'com.hub.lexicon',
     },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon/foreground.png",
-        "backgroundImage": "./assets/adaptive-icon/background.png"
+    android: {
+      adaptiveIcon: {
+        foregroundImage: './assets/adaptive-icon/foreground.png',
+        backgroundImage: './assets/adaptive-icon/background.png',
       },
-      "permissions": [
-        "android.permission.MANAGE_EXTERNAL_STORAGE",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
+      permissions: [
+        'android.permission.MANAGE_EXTERNAL_STORAGE',
+        'android.permission.READ_EXTERNAL_STORAGE',
+        'android.permission.WRITE_EXTERNAL_STORAGE',
       ],
-      "package": "com.hub.lexicon",
-        "targetSdkVersion": 36,
-  "compileSdkVersion": 36
+      package: 'com.hub.lexicon',
+      minSdkVersion: 21,
+      compileSdkVersion: 35,
+      targetSdkVersion: 35,
+      compileSdkVersion: 35,
     },
-    "extra": {
-      "router": {
-        "origin": false
+    extra: {
+      router: {
+        origin: false,
       },
-      "eas": {
-        "projectId": "540a2284-4d1d-412e-bdd9-2f5ab820e321"
-      }
+      eas: {
+        projectId: '540a2284-4d1d-412e-bdd9-2f5ab820e321',
+      },
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
+    runtimeVersion: {
+      policy: 'appVersion',
     },
-    "updates": {
-      "url": "https://u.expo.dev/540a2284-4d1d-412e-bdd9-2f5ab820e321"
+    updates: {
+      url: 'https://u.expo.dev/540a2284-4d1d-412e-bdd9-2f5ab820e321',
     },
-    "owner": "shashankraj007281"
-  }
-}
+    owner: 'shashankraj007281',
+  },
+};
